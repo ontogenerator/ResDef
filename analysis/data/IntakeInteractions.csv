@@ -1,0 +1,4 @@
+"estimate";"conf.low";"conf.high";"effect"
+0;-0.1;0.12;"females_phase2"
+0.02;-0.02;0.07;"night_phase2"
+0.01;-0.07;0.14;"sex_phase2"
