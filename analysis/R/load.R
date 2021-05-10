@@ -5,12 +5,12 @@ options(digits.secs = 3) # change options to see milliseconds in DateTime
 
 # folder <- choose.dir(caption = "Select main analysis folder")
 folder <- "analysis/data/"
-# load mastertable. Change for analysis of different data set
+# load mastertable with file path information for each experimental night
 mastertable <- read.csv2(file = paste0(folder, "metadata/mastertable.csv"), header = TRUE, sep = ";",
                          na.strings = "NA")
 
-# load Table of conditions. Change for analysis of different data set
-conditions <- read.csv2(file = paste0(folder, "metadata/conditions.csv"), header = TRUE, sep = ";")
+# load Table of conditions for each experimental night for each group and individual
+conditions <- read.csv2(file = paste0(folder, "metadata/conditions.csv"), header = TRUE, sep = ";", dec = ".")
 
 # helper function to read csv file with raw data and preprocess them
 load_raw_csv <- function(path) {

@@ -25,7 +25,12 @@ Sabine Wintergerst^1^, Vladislav Nachev^1\*\S^, York Winter^1\*\S^
 **Present Address:** ^\S^Institut für Biologie, Humboldt-Universität zu Berlin, 10099 Berlin, Germany
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.pos = "h")
+knitr::opts_chunk$set(
+	echo = FALSE,
+	fig.pos = "H",
+	message = FALSE,
+	warning = FALSE
+	)
 ```
 
 # Abstract
@@ -51,10 +56,10 @@ Our novel experimental set-up thus allowed us to perform a mostly automated expe
 library(ggpubr)
 library(gluedown)
 library(glue)
-# library(Hmisc)
 library(tidyverse)
 library(flextable)
 library(rstatix)
+library(ggbeeswarm)
 
 folder <- "data/"
 
@@ -70,7 +75,6 @@ theme_serif <- function() {
 }
 
 
-
 report_m_ci <- function(tbl, par = "_r_") {
 
   tbl <- tbl %>% 
@@ -80,6 +84,33 @@ report_m_ci <- function(tbl, par = "_r_") {
 
 }
 
+chase_summ <- read.csv2(paste0(folder, "ChaseSummary.csv"), dec = ".") %>% 
+  mutate(group = factor(group, levels = c("mixed1", "mixed2",
+                                          "mixed3", "mixed4",
+                                          "6m", "6f")),
+         sex = factor(sex, levels = c("m", "f")))
+
+total_chases <- chase_summ %>% 
+  ungroup() %>% 
+  summarise(total_chases = sum(n_chases)) %>% 
+  pull(total_chases)
+
+nightly_chases <- chase_summ %>%
+  mutate(incomplete_night = case_when(
+    group == "mixed1" & group_night == 4 ~ TRUE,
+    group == "mixed3" & group_night == 9 ~ TRUE,
+    TRUE ~ FALSE
+  )) %>% 
+  filter(!incomplete_night) %>% 
+  ungroup() %>% 
+  group_by(group, group_night, cond) %>% 
+  summarise(total_chases = sum(n_chases)) %>% 
+  group_by(group, cond) %>% 
+  summarise(n_nights = n(), total_chases = sum(total_chases), 
+            chases_night = total_chases/n_nights) %>% 
+  group_by(cond) %>% 
+  summarise(mean = round(mean(chases_night), 1),
+            sd = round(sd(chases_night), 1))
 ```
 
 ## (a) Subjects and housing
@@ -88,7 +119,7 @@ Experiments were conducted with 36 individuals of the 9-10g neotropical nectariv
 
 ## (b) Experimental set-up
 
-In the experimental room ten artificial flowers with automated nectar delivery [@winter_foraging_2005] were mounted along a 4.2m bar at a height of 1.20m (Fig. \@ref(fig:design)). The distance between flowers was 0.4m. Flowers were divided into two groups of five to simulate two flower patches. Each patch was enclosed by a sheet-covered frame to separate the groups of flowers spatially (Fig. \@ref(fig:design)). The only entrance to the patches was a 40cm gap between the ground and the bottom end of the enclosure (Fig. \@ref(fig:design), dashed line). From this entrance bats had to fly up vertically to reach the flowers. A syringe pump delivered nectar via tubes and pinch valves to the artificial flowers. Nectar rewards were triggered by the interruption of an infrared light beam at the flower opening. The RFID reader below the flower head identified a bat's ID code. Visits were recorded for all flowers during every experimental night from 16h to 4h. The reward schedule was configured using PhenoSoft Control (Phenosys GmbH, Berlin, Germany). Every detected event at a flower (including date, time, identity of the individual, duration of the event and amount of nectar delivered) was recorded for data analysis.
+In the experimental room ten artificial flowers with automated nectar delivery [@winter_foraging_2005] were mounted along a 4.2m bar at a height of 1.20m (Fig. \@ref(fig:design)). The distance between flowers was 0.4m. Flowers were divided into two groups of five to simulate two flower patches. Each patch was enclosed by a sheet-covered frame to separate the groups of flowers spatially (Fig. \@ref(fig:design)). The only entrance to the patches was a 40cm gap between the ground and the bottom end of the enclosure (Fig. \@ref(fig:design), dashed line). From this entrance bats had to fly up vertically to reach the flowers. A syringe pump delivered nectar via tubes and pinch valves to the artificial flowers. Nectar rewards were triggered by the interruption of an infrared light barrier at the flower opening. The RFID reader below the flower head identified a bat's ID code. Visits were recorded for all flowers during every experimental night from 16h to 4h. The reward schedule was configured using PhenoSoft Control (Phenosys GmbH, Berlin, Germany). Every detected event at a flower (including date, time, identity of the individual, duration of the event and amount of nectar delivered) was recorded for data analysis.
 
 (ref:design) Experimental set-up consisting of two spatially separated flower patches. (A) The flowers where mounted 1.2m above ground. These ten flowers were divided into two patches (L and R) with five flowers each. (B) The patches were spatially separated by using a wooden frame covered with plastic sheet. To make it more demanding for bats to enter the patch, the only entrance was close to the ground in front of the flowers through a gap of 0.4 m from the ground to the lower rim of the plastic foil. (C) Schematic drawing of the experimental set-up from above. The dashed line indicates the side with the patch entrance.
 
@@ -99,23 +130,23 @@ knitr::include_graphics("./images/design.pdf")
 ## (c) Experimental procedure
 
 Six bats were randomly caught from the colony and were tested simultaneously as a group. Four experimental groups consisted of three males and three females (mixed groups), whereas one group consisted of six males, and another of six females. All bats were weighed before the experiment.\
-During the nightly experiments, in addition to the nectar provided by artificial flowers, bats had access to pollen and water and to 6$mL$ of additional food containing 200mg NektarPlus (Nekton, Keltern, Germany) and 300mg milk powder (Milasan Folgemilch 2, Sunval Baby Food GmbH, Mannheim, Germany) dissolved in water. Rewards at flowers consisted always of 30$\mu L$ nectar (15% w/w sugar concentration, sucrose: fructose 1:2). Before the experimental schedule started, individuals were allowed to familiarize themselves with the set-up and the artificial flowers. Since during this phase the cover was removed, the two flower patches were not spatially separated and every flower visit was rewarded. This phase lasted for one to four nights until each bat visited the flowers regularly. One female of the first mixed group did not visit any artificial flower during the first night and was replaced by another female.\
-During the main experiment, the two flower patches were covered and spatially separated. Experimental nights were divided into two phases. During the first phase of the night only one of the two flower patches was rewarding, and therefore the resources were spatially clumped. The fixed time interval between rewards was 60s. During the second phase of the night both patches gave rewards, resources were evenly distributed across the patches, and the fixed time interval between two rewards at a flower was increased to 120s. Therefore, the amount of food available per unit time did not change during the whole night; only the spatial distribution of food changed from the clumped resource condition with one patch rewarding (five flowers) during the first phase of the night to the distributed resource condition with two patches rewarding (ten flowers) during the second phase of the night. With this experimental schedule, the maximal amount of nectar the bats could collect was 108$mL$, which corresponds to 18$mL$ nectar per individual per night. The rewarding patch during the first phase of the night was chosen pseudo-randomly and the same patch was never chosen in more than two consecutive nights. For the mixed groups, the duration of the clumped resource condition was six hours and the experiment lasted nine nights (seven nights for the first mixed group). The duration of the first part of the night was more variable (4-8h) in the same-sex groups and the experiment lasted eight nights for the male group and nine nights for the female group).\
+During the nightly experiments, in addition to the nectar provided by artificial flowers, bats had access to pollen and water and to 6$mL$ of additional food containing 200mg NektarPlus (Nekton, Keltern, Germany) and 300mg milk powder (Milasan Folgemilch 2, Sunval Baby Food GmbH, Mannheim, Germany) dissolved in water. Rewards at flowers consisted always of 30$\mu L$ nectar (15% w/w sugar concentration, sucrose: fructose 1:2). Before the experimental schedule started, individuals were allowed to familiarize themselves with the set-up and the artificial flowers. Since during this training phase the plastic cover was removed, the two flower patches were not spatially separated and every flower visit was rewarded. This phase lasted for one to four nights until each bat visited the flowers regularly. One female of the first mixed group did not visit any artificial flower during the first night and was replaced by another female.\
+During the main experiment, the two flower patches were covered and spatially separated. Experimental nights were divided into two phases. During the first phase of the night only one of the two flower patches was rewarding, and therefore the resources were spatially clumped. The fixed time interval between rewards was 60s. During the second phase of the night both patches gave rewards, resources were evenly distributed across the patches, and the fixed time interval between two rewards at a flower was increased to 120s. Therefore, the amount of food available per unit time did not change during the whole night; only the spatial distribution of food changed from the clumped resource condition with one patch rewarding (five flowers) during the first phase of the night to the distributed resource condition with two patches rewarding (ten flowers) during the second phase of the night. With this experimental schedule, the maximal amount of nectar the bats could collect was 108$mL$, which corresponds to 18$mL$ nectar per individual per night. The rewarding patch during the first phase of the night was chosen pseudo-randomly and the same patch was never chosen in more than two consecutive nights. For the mixed groups, the duration of the clumped resource condition was six hours and the experiment lasted nine nights (seven nights for the first mixed group). The duration of the first part of the night was variable (range = 4-8h, mean = 6h) in the same-sex groups and the experiment lasted eight nights for the male group and nine nights for the female group).\
 
 ## (d) Chasing behaviour
 
-We took the chasing frequency of individuals at the artificial flowers as an indicator of the intensity of aggressive interactions between group members. We developed a method to automatically detect and score chasing events using the computer-collected animal identification data from the RFID sensors and flower sensors. In a previous pilot study [@wintergerst_modulators_2018; Appendix], three mixed groups of bats were video recorded for 24h over 14 nights, and the video data were synchronized to the computer-collected data. From the analysis of the combined data we were able to identify the following pattern of visitation events that reliably indicated a chasing event between two identified individuals: (*i*) an identified bat collected a reward at a flower, (*ii*) its visit ended and (*iii*) was immediately followed by a very brief (\<200ms) RFID detection of a second bat, the chaser. Importantly, this second bat never attempted to drink and therefore did not insert its nose into the artificial flower and interrupt the light barrier inside the flower head. This distinguished such a chase from the occasional quick succession of two drinking visits by two bats at the same flower. The automated detection of chasing events not only offers a considerable time profit for the experimenter, but also avoids the human observer bias, a common drawback in video analysis. For the 24 hours of combined video data and automatically logged data, all 89 chasing events detected in the computer-logged data were confirmed by video. Therefore, we consider the algorithm for detecting chasing events in the logged data to be highly reliable. Of course, chases did not only occur at the artificial flowers. Thus, our chase numbers are only an indicator of chasing intensity between pairs of bats. For example, in one hour of video we observed 61 chasing events, but only five of those occurred during flower visits and were also automatically detected. However, since we detected a total of 1757 chasing events with our algorithm (see below) for the 36 participating bats, we considered the automated approach adequate for quantifying the within-group dominance relationships. The total number of flower visits per night constrains the number of chasing opportunities. Therefore, we corrected our counts of chasing events by dividing observed chases by the total number of visits for each bat on each night.\
+We took the chasing frequency of individuals at the artificial flowers as an indicator of the intensity of aggressive interactions between group members. We developed a method to automatically detect and score chasing events using the computer-collected animal identification data from the RFID sensors and flower sensors. In a previous pilot study [@wintergerst_modulators_2018; Appendix], three mixed groups of bats were video recorded for 24h over 14 nights, and the video data were synchronized to the computer-collected data. From the analysis of the combined data we were able to identify the following pattern of visitation events that reliably indicated a chasing event between two identified individuals: (*i*) an identified bat collected a reward at a flower, (*ii*) its visit ended and (*iii*) was immediately followed by a very brief (\<200ms) RFID detection of a second bat, the chaser. Importantly, this second bat never attempted to drink and therefore did not insert its nose into the artificial flower and interrupt the light barrier inside the flower head. This distinguished such a chase from the occasional quick succession of two drinking visits by two bats at the same flower. The automated detection of chasing events not only offers a considerable time profit for the experimenter, but also avoids the human observer bias, a common drawback in video analysis. For the 24 hours of combined video data and automatically logged data, all 89 chasing events detected in the computer-logged data were confirmed by video. Therefore, we consider the algorithm for detecting chasing events in the logged data to be highly reliable. Of course, chases did not only occur at the artificial flowers. Thus, our chase numbers are only an indicator of chasing intensity between pairs of bats. For example, in one hour of video we observed 61 chasing events, but only five of those occurred during flower visits and were also automatically detected. However, since with our algorithm (see below) we detected a total of `r total_chases` chasing events (`r glue(nightly_chases$mean[1], " ± ", nightly_chases$sd[1])` events per night during the main experiment and only `r glue(nightly_chases$mean[2], " ± ", nightly_chases$sd[2])` during the training nights, mean ± SD) for the 36 participating bats, we considered the automated approach adequate for quantifying the within-group dominance relationships. The total number of individual detections per night constrains the number of chasing opportunities. Therefore, we corrected our counts of chasing events by dividing the number of observed chases by the total number of detections for each bat on each night.\
 
 ## (e) Statistical analysis
 
 To investigate the difference in chasing behaviour between males and females and between the resource conditions (one versus two rewarding patches) a Bayesian generalized linear mixed model [`MCMCglmm`, @hadfield_mcmc_2010] with a binomial error structure was used. Body weight as an approximation of size and the full interaction between resource condition and sex were included as fixed effects and the influence of these fixed effects on the proportion of chasing events was assessed. Experimental group and individual were included as random effects. The same model structure was used to address the question if the proportion of being chased was influenced by these independent variables. If one or more individuals start to defend flowers and thus exclude others from drinking, nectar consumption should increasingly differ between individuals since the successful chaser should gain a higher nectar intake thus reducing the intake of the chased individuals. Therefore, the between-individual difference in nectar consumption over the course of the experiment was compared between experimental groups and resource conditions (clumped vs. distributed). First, each individual's total nectar consumption standardized by the number of hours of foraging during the clumped (one rewarding patch) and distributed (two rewarding patches) resource condition was determined for each experimental night. Then these data were used to calculate group standard deviations, separately for the males and females of each group. In order to assess the influence of resource defence on the individual differences in nectar consumption (standard deviation of nectar intake) we fit a `MCMCglmm` model with a Gaussian error structure and the following fixed effects: sex, experimental night, and resource condition (clumped or distributed), as well as all two-way interactions. Again, we included group and individual as random effects.\
-By plotting individual nectar consumption during the last two nights of the experiment against the frequency of chasing other individuals, two non-overlapping groups of males were obtained, which were labeled dominant and subdominant males, respectively. Such a clear pattern was not observed in females. Therefore, each mixed group contained individuals belonging to one of three different types of social status: female, dominant male, and subdominant male. To address the question whether nectar consumption varied depending on social status during the early and late stages of the experiment we used Welch tests and adjusted the p values using the Holms method for multiple comparisons.\
+By plotting individual nectar consumption during the last two nights of the experiment against the frequency of chasing other individuals, two non-overlapping groups of males were obtained, which were labelled dominant and subdominant males, respectively. Such a clear pattern was not observed in females. The identification of dominant individuals was also supported by calculating the individual Glicko ratings from all chasing events over the last two experimental nights in each group. Therefore, each mixed group contained individuals belonging to one of three different types of social status: female, dominant male, and subdominant male. To address the question whether nectar consumption varied depending on social status during the early and late stages of the experiment we used Welch tests and adjusted the p values using the Holms method for multiple comparisons.\
 All statistical analyses were conducted using R [@r_core_team_r:_2021]. All data and code are available in the Zenodo repository: xxx.\
 
 # 2. Results
 
 The goal of these experiments was to investigate the social structure of resource defence in *Glossophaga soricina*, in addition to the potential influence of interference competition on individual nectar intake. The first striking observation we made was the uneven distribution of nectar consumed between the sexes and individuals. For example, in the first mixed group of bats tested, after only two nights the nectar consumption of two males was nearly reduced to zero, whereas the third male increased its consumption substantially (Fig. \@ref(fig:mixedexample)A). This pattern, however, only occurred during the condition when resources were clumped. Nectar consumption of females did not change even during the clumped condition. On the same nights but during the second half of the night, with resources distributed over two patches, nectar consumption of males and females converged at the end of the experiment (Fig. \@ref(fig:mixedexample)B).\
-In total 1757 chasing events were identified within the data. In all mixed groups males chased other bats in front of flowers significantly more often than females did (Fig. \@ref(fig:chases)A, Table \@ref(tab:chasesglmm)). Notably, the frequency of females as active chasers in female-only groups was higher than chasing by females in the mixed groups (Fig. \@ref(fig:chases)A). Although the rate of nectar availability remained constant throughout the night and only the spatial distribution of the resources changed, the number of chasing events was significantly lower during the distributed resource condition when rewards were available at both patches (Table \@ref(tab:chasesglmm)). There was no significant difference between the sexes in how often a bat was chased by another individual but individuals were chased less during the distributed resource condition (Fig. \@ref(fig:chases)B, Table \@ref(tab:chasesglmm)). Weight as an indicator of size had no significant effect on chasing frequency or the frequency of being chased (Table \@ref(tab:chasesglmm)).\
+In all mixed groups males chased other bats in front of flowers significantly more often than females did (Fig. \@ref(fig:chases)A, Table \@ref(tab:chasesglmm)). Notably, the frequency of females as active chasers in female-only groups was higher than chasing by females in the mixed groups (Fig. \@ref(fig:chases)A). Although the rate of nectar availability remained constant throughout the night and only the spatial distribution of the resources changed, the number of chasing events was significantly lower during the distributed resource condition when rewards were available at both patches (Table \@ref(tab:chasesglmm)). There was no significant difference between the sexes in how often a bat was chased by another individual (Fig. \@ref(fig:chases)B) but individuals were chased less during the distributed resource condition (Table \@ref(tab:chasesglmm)). Weight as an indicator of size had no significant effect on chasing frequency or the frequency of being chased (Table \@ref(tab:chasesglmm)).\
 
 (ref:mixedexample) Exemplary change of individual daily nectar consumption during the experiment of one mixed experimental group consisting of three males and three females (symbols show different individuals). (**A**). During the clumped resource condition (first part of the experimental night) rewards were only available concentrated at one patch. The nectar consumption of two males approached zero after only two nights, whereas the third male received considerably more nectar than at the beginning of the experiment (males filled symbols). Females on the other hand maintained their level of daily nectar consumption (females open symbols). (**B**) During the distributed resource condition (second part of the experimental night) rewards were available at both patches. Under this condition, individuals nearly equalized their level of nectar consumption over the course of the experiment. The second part of night 4 was excluded due to technical problems.
 
@@ -168,25 +199,17 @@ ggarrange(cons_clumped, cons_distr, labels = c("A", "B"),
 (ref:chases) Sexes differed in the frequency of chasing other individuals. (**A**) Males (dark symbols) chased others significantly more than females did (light symbols, Table \@ref(tab:chasesglmm)). Single sex groups for comparison. Shown are the individual proportions of chasing events over the whole experiment. Notably, in the females-only group some females chased more than any female in the mixed groups. (**B**) Being chased by other bats did not differ significantly between sexes during the clumped resource condition (Table \@ref(tab:chasesglmm)), but the variance was much higher for males.
 
 ```{r, chases, fig.cap="(ref:chases)", fig.width=14}
-chase_summ <- read.csv2(paste0(folder, "ChaseSummary.csv"), dec = ".") %>% 
-  mutate(group = factor(group, levels = c("mixed1", "mixed2",
-                                          "mixed3", "mixed4",
-                                          "6m", "6f")),
-         sex = factor(sex, levels = c("m", "f")))
 
 fig_chases <- chase_summ %>% 
-  filter(phase == 1) %>% 
+  filter(phase == 1, cond == "test") %>% 
   group_by(sex, group, IdLabel) %>% 
   summarise(prop_chases = mean(prop_chases)) %>% 
   ggplot() +
-  geom_jitter(aes(group, prop_chases, color = sex), alpha = 0.7, size = 4, width = 0.1) +
-  # geom_boxplot(aes(group, prop_chases, fill = sex),
-  #              width = 0.3, size = 0.6, alpha = 0.7,
-  #              position = position_dodge(width = 1)) +
+  geom_beeswarm(aes(group, prop_chases, color = sex),
+              alpha = 0.7, cex = 2, size = 4) +
   labs(title = "Chasing", x = "", y = "Proportion chasing") +
   theme_serif() +
   scale_color_viridis_d(name = "", labels = c("Male", "Female")) +
-  # scale_fill_manual("", values = c("grey24", "white"), guide = FALSE) +
   scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2", "Mixed \n Group3",
                               "Mixed \n Group4", "Male \n Group", "Female \n Group")) +
   scale_y_continuous(limits = c(0, 0.016), labels = c(0, "", 0.01, "")) +
@@ -196,11 +219,12 @@ fig_chases <- chase_summ %>%
         legend.position = c(0.2, 0.9))
 
 fig_chased <- chase_summ %>%  
-    filter(phase == 1) %>% 
+  filter(phase == 1, cond == "test") %>% 
   group_by(sex, group, IdLabel) %>% 
   summarise(prop_chased = mean(prop_chased)) %>% 
   ggplot() +
-  geom_jitter(aes(group, prop_chased, color = sex), alpha = 0.7, size = 4, width = 0.1) +
+   geom_beeswarm(aes(group, prop_chased, color = sex),
+              alpha = 0.7, cex = 2, size = 4) +
     labs(title = "Being chased", x = "", y = "Proportion chased") +
   theme_serif() +
   scale_color_viridis_d(guide = FALSE) +
@@ -232,24 +256,7 @@ est_chases %>%
 intake_interactions <- read.csv2(paste0(folder, "IntakeInteractions.csv"), dec = ".")
 ```
 
-Resource defence should lead to a larger between-individual difference in nectar consumption. Between-individual differences in nectar consumption was quantified as the standard deviation of nectar intake in each group, separately for males and females. During the clumped resource condition, the standard deviation increased significantly (Fig. \@ref(fig:intaketime), Table \@ref(tab:intaketimeglmm)) for both sexes and males had higher standard deviations of nectar intake (Table \@ref(tab:intaketimeglmm)). However, during the distributed resource condition the standard deviation of mean nectar consumption was significantly lower (Fig. \@ref(fig:intaketime), Table \@ref(tab:intaketimeglmm)), there was no difference between the sexes (`r report_m_ci(filter(intake_interactions, effect == "sex_phase2"), par = "estimate")`) and there was no significant change over the course of the experiment (`r report_m_ci(filter(intake_interactions, effect == "night_phase2"), par = "estimate")`).
-
-(ref:intaketime) The standard deviation of group nectar consumption was used to measure the between individual differences in nectar intake. It was calculated for the clumped (left panel) and the distributed (right panel) resource conditions, separately for males and females (line types) of each experimental group (different colors). For visualization only, lines give the corresponding fits based on locally weighted scatterplot smoothing (loess).
-
-```{r, intaketime, fig.cap="(ref:intaketime)", fig.width=14}
-vol_sd_time <- read.csv2(paste0(folder, "IntakeTime.csv"), dec = ".")
-
-vol_sd_time %>% 
-  ggplot(aes(group_night, sd_consumed, color = group)) +
-  geom_point() +
-  geom_smooth(aes(group = group2, linetype = sex), method = "loess", se = FALSE) +
-  facet_grid(. ~ phase, labeller = labeller(phase = c(`1` = "Clumped resource condition",
-                                                      `2` = "Distributed resource condition"))) +
-  scale_color_viridis_d(option = "turbo") +
-  scale_x_continuous(breaks = 1:9) +
-  theme_serif() +
-  labs(x = "Experimental night", y = "Standard deviation of\nnectar intake")
-```
+Resource defence should lead to a larger between-individual difference in nectar consumption. Between-individual differences in nectar consumption was quantified as the standard deviation of nectar intake in each group, separately for males and females. During the clumped resource condition, the standard deviation increased significantly for both sexes and males had higher standard deviations of nectar intake (Fig. \@ref(fig:intaketime), Table \@ref(tab:intaketimeglmm)). However, during the distributed resource condition the standard deviation of mean nectar consumption was significantly lower (Fig. \@ref(fig:intaketime), Table \@ref(tab:intaketimeglmm)), there was no difference between the sexes (`r report_m_ci(filter(intake_interactions, effect == "sex_phase2"), par = "estimate")`) and there was no significant change over the course of the experiment (`r report_m_ci(filter(intake_interactions, effect == "night_phase2"), par = "estimate")`).
 
 ```{r intaketimeglmm, tab.cap="Summary of fixed effects from a generalized linear mixed-effects model of the standard deviation of nectar intake over time."}
 est_vol_time <- read.csv2(paste0(folder, "mcmcIntakeTime.csv"), dec = ".")
@@ -263,32 +270,22 @@ est_vol_time %>%
   add_footer_row(values = 'Note: Fixed estimates whose credible intervals do not span zero are shown in bold. pMCMC = posterior probability', colwidths = 4)
 ```
 
-When plotting chasing events against nectar consumption the data for males fall into two non-overlapping groups. The males of one cluster (Fig. \@ref(fig:chasingnectar)A, inside dashed oval) chased other individuals and consumed more nectar than the other males. This cluster included only one male from the mixed groups but two males from the males-only group. These males were categorized as "dominant". The second cluster of males (Fig. \@ref(fig:chasingnectar)A, outside and below dashed oval) was characterized by a low frequency of chasing and low nectar consumption. These males were categorized as "subdominant". In females such a pattern did not emerge (Fig. \@ref(fig:chasingnectar)B). While in the females-only group four females chased other females more frequently, only one of these females would be classified as dominant using the same cut-off criteria we used for the males (Fig. \@ref(fig:chasingnectar)B). During the first two nights of the experiment in the clumped resource condition, there was a difference in nectar intake between dominant and subdominant males and between subdominant males and females (Fig. \@ref(fig:nectarcontrasts)). During the last two nights of the experiment in the clumped resource dondition, the three groups clearly differed, with the highest nectar intake in dominant males, an intermediate intake in females, and lowest nectar intake in subdominant males (Fig. \@ref(fig:nectarcontrasts)). In contrast, in the distributed resource condition there were no differences between the nectar intake of dominant and subdominant males in any stage of the experiment (Fig. \@ref(fig:nectarcontrasts)). The subdominant males had a significantly lower nectar intake than females in the first two, but not in the last two experimental nights (Fig. \@ref(fig:nectarcontrasts)).
+When plotting chasing events against nectar consumption the data for males fall into two non-overlapping groups. The males of one cluster (Fig. \@ref(fig:chasingnectar)A, inside dashed oval) chased other individuals and consumed more nectar than the other males. This cluster included only one male from the mixed groups but two males from the males-only group. These males were categorized as "dominant". The second cluster of males (Fig. \@ref(fig:chasingnectar)A, outside and below dashed oval) was characterized by a low frequency of chasing and low nectar consumption. These males were categorized as "subdominant". In females such a pattern did not emerge (Fig. \@ref(fig:chasingnectar)B). This classification was also supported by the Glicko ratings in each group (Fig. \@ref(fig:glicko)) and the obersvation that there was generally an inverse relationship between the frequency of chasing and the frequency of being chased, especially in males (Fig. \@ref(fig:chaserchasing)). While in the females-only group four females chased other females more frequently, only one of these females would be classified as dominant using the same cut-off criteria we used for the males (Fig. \@ref(fig:chasingnectar)B), but it was not the female with the best Glicko rating (Fig. \@ref(fig:glicko)). During the first two nights of the experiment in the clumped resource condition, there was a difference in nectar intake between dominant and subdominant males and between subdominant males and females (Fig. \@ref(fig:nectarcontrasts)). During the last two nights of the experiment in the clumped resource dondition, the three groups clearly differed, with the highest nectar intake in dominant males, an intermediate intake in females, and lowest nectar intake in subdominant males (Fig. \@ref(fig:nectarcontrasts)). In contrast, in the distributed resource condition there were no differences between the nectar intake of dominant and subdominant males in any stage of the experiment (Fig. \@ref(fig:nectarcontrasts)). The subdominant males had a significantly lower nectar intake than females in the first two, but not in the last two experimental nights (Fig. \@ref(fig:nectarcontrasts)).
 
 (ref:chasingnectar) Influence of chasing frequency on nectar intake in the clumped resource condition during the last two nights of the experiment. (**A**) Males that more often chased other males also consumed more nectar. Males were divided into two non-overlapping groups by considering the chasing frequency and the amount of nectar an individual received during the clumped resource condition at the end of the experiment. Dominant males (inside dashed line oval) met two criteria: they chased other individuals at flowers more frequently ($>0.003$) and received more nectar ($>0.75~mL~h^{-1}$) during the clumped resource condition. Individuals outside the dashed line oval were categorized as subdominant males. (**B**) Nectar consumption of females did not depend on chasing frequency during the clumped resource condition and non-overlapping groups did not emerge.
 
 ```{r, chasingnectar, fig.cap="(ref:chasingnectar)", fig.width=12}
 
-rev_count <- vis_summaries %>% 
-  filter(cond == "test") %>% 
-  ungroup() %>% 
-  count(group, group_night) %>% 
-  group_by(group) %>% 
-  mutate(n = n():1) %>% 
-  rename(rev_night = n) # reverse count the nights to find the last two nights (different for each group)
-
-
 intake_lastnights_clumped <- vis_summaries %>% 
-  left_join(rev_count) %>% 
   filter(rev_night < 3, phase == 1) %>% 
   group_by(group, sex, IdLabel) %>% 
   summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur)))
 
 chase_nectar <- chase_summ %>% 
-  filter(phase == 1) %>% 
-  group_by(group, sex, IdLabel) %>% 
+  filter(phase == 1, cond == "test") %>% 
+  group_by(group, sex, IdLabel, glicko_rank) %>% 
   summarise(prop_chases = sum(n_chases)/sum(n_detections)) %>% 
-  left_join(intake_lastnights_clumped) 
+  left_join(intake_lastnights_clumped)
 
 chase_males <- chase_nectar %>%
   filter(sex == "m") %>% 
@@ -346,7 +343,6 @@ statuses <- chase_nectar %>%
   select(IdLabel, status)
 
 cons_contrasts <- vis_summaries %>%
-  left_join(rev_count) %>%
   group_by(group, sex, IdLabel) %>% 
   mutate(partition = case_when(
     is.na(rev_night) ~ NA_character_,
@@ -407,13 +403,13 @@ ggboxplot(cons_contrasts, x = "phase", y = "vol_hr",
 
 ## Behavioural observations
 
-Qualitative behavioural observations of four hours of video recordings revealed several behaviours that seem to be characteristic for dominant males. Instead of just visiting the flowers and leaving the patch as the other individuals did, dominant males remained hanging between the flowers within the patch for a significant amount of time (Appendix Fig. \@ref(fig:video)). When other individuals came close due to visits of directly adjacent flowers, dominant males often spread one wing in the direction of the other individual which could be interpreted as a threatening posture. Some individuals were attacked and chased away by dominant males while visiting artificial flowers. In this case, dominant males mostly attacked from above with their mouth wide open, and followed the intruder for a short distance. Sometimes the chasing escalated into fighting with both bats tumbling towards the ground and resuming their flight only shortly above the floor. In rare cases, these fights might have led to small injuries. One subdominant male had several fresh scratches on its wing that were not present before the experiment and that were possibly caused by teeth or claws (Appendix Fig. \@ref(fig:wing)). After a successful flower defence, the dominant male normally visited most of the five flowers within the patch before returning to its position between the flowers.
+Qualitative behavioural observations of four hours of video recordings revealed several behaviours that seem to be characteristic for dominant males. Instead of just visiting the flowers and leaving the patch as the other individuals did, dominant males remained hanging between the flowers within the patch for a significant amount of time (Fig. \@ref(fig:video)). When other individuals came close due to visits of directly adjacent flowers, dominant males often spread one wing in the direction of the other individual which could be interpreted as a threatening posture. Some individuals were attacked and chased away by dominant males while visiting artificial flowers. In this case, dominant males mostly attacked from above with their mouth wide open, and followed the intruder for a short distance. Sometimes the chasing escalated into fighting with both bats tumbling towards the ground and resuming their flight only shortly above the floor. In rare cases, these fights might have led to small injuries. One subdominant male had several fresh scratches on its wing that were not present before the experiment and that were possibly caused by teeth or claws (Fig. \@ref(fig:wing)). After a successful flower defence, the dominant male normally visited most of the five flowers within the patch before returning to its position between the flowers.
 
 # 3. Discussion
 
 Similar to observations in free-living populations, in this experiment *Glossophaga soricina* competed for nectar not only by exploitation but also by interference competition. However, the results show that the predisposition to defend resources and the influence of interference competition on individual nectar intake differed significantly between the sexes. Only a subset of males successfully defended flower patches. These dominant males were characterized by the highest frequency of chasing other individuals away from profitable flowers and by a substantial increase in nectar intake by the end of the experimental run. Although these dominant males chased females and other males equally often, only the nectar intake of subdominant males but not of the females was affected by this behaviour. Thus, male-initiated interference competition increased the difference in nectar intake between males but did not affect females. The frequency of aggressive interactions was higher and males only defended resources successfully when the available nectar was concentrated at only one flower patch. This supports the hypothesis that clumped resources favour an increase in aggressive interactions [@grant_whether_1993].\
-To the best of our knowledge, this study is the first report of sex-dependent differences in the resource defence behaviour of neotropical nectar-feeding bats. In mixed sex groups, females seemed to be unaffected by the behaviour of dominant males whereas subdominant males were excluded at least partially from the defended flower patch. There are two possible explanations for this differential effect on subdominant males and females. On the one hand, dominant males might just not be capable of excluding females. On the other hand, dominant males could tolerate females in their defended patch because they might receive additional benefits, for example tolerating females could lead to an increase in mating opportunities. Similar social dynamics have been described in the insectivorous bat species *Myotis daubentonii* [@senior_sex_2005]. Dominant males of this species temporarily exclude other males from profitable habitats whereas females are tolerated and in addition to securing access to resources, the successful exclusion of other males has been shown to increase the reproductive success of dominant males [@senior_sex_2005]. Similarly, it has been observed that male *Eulampis jugularis* hummingbirds, which successfully defend highly profitable feeding-territories against other males while sharing the available resources with females, experienced an increase in their mating success [@temeles_mate_2010].\
-However, in our experiment dominant males chased females about as often as they chased subdominant males (Table \@ref(tab:chasesglmm)). If females were able to feed in the defended patch because dominant males tolerated them due to potential additional benefits, it could be that the detected chasing events by dominant males differed in quality depending on the sex of the intruder. However, this was not further quantified in the current study. We extracted the frequency of chasing events from data automatically recorded at artificial flowers (successive detection of two different IDs while the first was feeding at the flower). Therefore, it was not possible to determine if males showed behavioural differences when chasing other males in comparison to chasing females. However, the recorded video revealed that individuals chased each other not only directly at the artificial flowers but also in other areas of the flower patch. Since individuals could only be identified by their RFID tag directly at the RFID reader attached to artificial flowers the sex of individuals chasing each other in other areas of the experimental room remains unknown. However, some subdominant individuals showed marks from small injuries at their wings after the experiment (see example in Appendix Fig. \@ref(fig:wing)) and such marks were only observed in males. This could be an indication that dominant males could direct more aggression towards subdominant males besides the interactions observed directly at the flowers. This could explain why subdominant males were more affected than females by the aggressive resource defence behaviour of dominant males. Such sexual dimorphism in aggressive resource defence is known from other nectar-feeding vertebrates, like hummingbirds. It is thought that the beaks of the males of some territorial species are specifically adapted as intrasexually selected weapons [@rico-guevara_shifting_2019].
+To the best of our knowledge, this study is the first report of sex-dependent differences in the resource defence behaviour of neotropical nectar-feeding bats. In mixed sex groups, females seemed to be unaffected by the behaviour of dominant males whereas subdominant males were excluded at least partially from the defended flower patch. There are two possible explanations for this differential effect on subdominant males and females. On the one hand, dominant males might just not be capable of excluding females. On the other hand, dominant males could tolerate females in their defended patch because they might receive additional benefits, for example tolerating females could lead to an increase in (future) mating opportunities. Similar social dynamics have been described in the insectivorous bat species *Myotis daubentonii* [@senior_sex_2005]. Dominant males of this species temporarily exclude other males from profitable habitats whereas females are tolerated and in addition to securing access to resources, the successful exclusion of other males has been shown to increase the reproductive success of dominant males [@senior_sex_2005]. Similarly, it has been observed that male *Eulampis jugularis* hummingbirds, which successfully defend highly profitable feeding-territories against other males while sharing the available resources with females, experienced an increase in their mating success [@temeles_mate_2010].\
+However, in our experiment dominant males chased females about as often as they chased subdominant males (Table \@ref(tab:chasesglmm)). If females were able to feed in the defended patch because dominant males tolerated them due to potential additional benefits, it could be that the detected chasing events by dominant males differed in quality depending on the sex of the intruder. This was not further quantified in the current study, but could be potentially investigated using audio recordings [@knornschild_vocal_2010]. We extracted the frequency of chasing events from data automatically recorded at artificial flowers (successive detection of two different IDs while the first was feeding at the flower). Therefore, it was not possible to determine if males showed behavioural differences when chasing other males in comparison to chasing females. However, the recorded video revealed that individuals chased each other not only directly at the artificial flowers but also in other areas of the flower patch. Since individuals could only be identified by their RFID tag directly at the RFID reader attached to artificial flowers the sex of individuals chasing each other in other areas of the experimental room remains unknown. However, some subdominant individuals showed marks from small injuries at their wings after the experiment (see example in Fig. \@ref(fig:wing)) and such marks were only observed in males. This could be an indication that dominant males directed more aggression (biting) towards subdominant males than towards females. The sex-dependent defence of food resources described here is consistent with observations of free-flying *G. commissarisi*, in which males visited on average a smaller number of artificial flowers than females did [@nachev_behavioral_2019]. Such sexual dimorphism in aggressive resource defence is also known from other nectar-feeding vertebrates, like hummingbirds. It is thought that the beaks of the males of some territorial species are specifically adapted as intrasexually selected weapons [@rico-guevara_shifting_2019].
 
 ```{r}
 subdominants <- statuses %>%
@@ -430,11 +426,11 @@ mean_intake_subd <- vis_summaries %>%
             sd = round(sd(mean_vol_hr), 2))
 ```
 
-Generally, females showed lower chasing frequencies, but, surprisingly, some females in the females-only group showed an increased nectar consumption and chasing frequency, compared to the females in the mixed groups (Fig. \@ref(fig:chasingnectar)B). Thus it appears that in the absence of male individuals, some females begin to exert dominant behaviour over the other females. These findings are similar to the social structure of resource defence found in some nectar-feeding bird species. For example, in free-living ruby-throated hummingbirds females also have lower levels of defence [@rousseu_resource_2014]. Moreover, although both male and female *Eulampis jugolaris* hummingbirds defend feeding territories during the non-breeding season, males are always dominant over females [@wolf_time_1971; @temeles_foraging_2005]. It would be interesting to better understand why females are less affected by the aggressive resource defence behaviour of dominant males compared to subdominant males and also why females themselves were not able to completely monopolize the profitable patch against other females.\
-In all mixed sex groups, only one male per group became dominant and successfully defended flowers, whereas in the males-only group two males exhibited dominant behaviour (Fig. \@ref(fig:chasingnectar)A). A closer look at the nectar consumption at each flower revealed that on the last night of the experiment the two males had nearly monopolized different flowers within the same patch rather than sharing access to the same flowers (Appendix Fig. \@ref(fig:malesonly)). Such flower partitioning was also also observed in the females-only group (Appendix Fig. \@ref(fig:femalesonly)), but rarely seen in the mixed groups (Appendix Figs. \@ref(fig:mixed1)-\@ref(fig:mixed4)). The successful resource defence by two individuals in the male-only group showed that resource defence can occur independent of the presence of females.\
-Although the position of the rewarding patch during the clumped resource condition changed between the nights between the left and right, usually the same male continued to successfully defend the patch (Appendix Figs. \@ref(fig:malesonly)-\@ref(fig:mixed4)). This means that males defended the resources themselves and not a particular location. Furthermore, this shows that even after changing the location of the defended patch the same individuals were able to succeed in monopolizing the resources, indicating a stable hierarchy at least for the duration of the experiment.\
-The ability of an individual to successfully defend and monopolize resources is often correlated with distinct physical characteristics for example body size [@searcy_morphological_1979]. However, the results show that weight as an approximation of size did not correlate significantly with the chasing frequency of individuals (Table \@ref(tab:chasesglmm)) and therefore did not predict which male succeeded to defend a flower patch during this study. Another factor that could influence the success in defending flowers is age and therefore experience [@arcese_age_1987; @yasukawa_territory_1979]. Since we could only discriminate between young and adult animals, we cannot dismiss age and experience as a predictor of successful flower defence.\
-In this study, subdominant males received considerably less nectar than dominant males and females (Fig. \@ref(fig:nectarcontrasts)). However, except in mixed group 1, subdominant males were rarely completely excluded from the flower patch and their average nectar intake during the clumped resource condition was still `r mean_intake_subd$mean_intake` $\pm$ `r mean_intake_subd$sd` $mL~h^{-1}$ (mean $\pm$ SD). This result is in accordance with observations of free-living *G. soricina* in Colombia. There, subdominant bats exploited the flowers defended by other individuals as soon as the dominant bat temporarily ceased defending [@lemke_foraging_1984]. Furthermore, in our study the frequency of chasing events decreased significantly during the distributed resource condition in the second part of the night (Table \@ref(tab:chasesglmm)). This supports the theoretical prediction that aggressive defence behaviour increases when resources are spatially concentrated [@grant_spatial_1993]. Resource defence should only occur when the energy gain outweighs the cost of aggressive interactions [@brown_evolution_1964]. Therefore, a possible explanation for this observation could be the decrease in quality of the defended patch once its nectar supply dropped to half. Together, these results suggest that along the different degrees of territorial behaviour, resource defence observed in *G. soricina* seems to represent a transient monopolization of resources instead of a longer-term permanent exclusion of intruders.
+Generally, females showed lower chasing frequencies, but, surprisingly, some females in the females-only group showed an increased nectar consumption and chasing frequency, compared to the females in the mixed groups (Fig. \@ref(fig:chasingnectar)B). Thus it appears that in the absence of male individuals, some females begin to exert dominant behaviour over the other females. These findings are similar to the social structure of resource defence found in some nectar-feeding bird species. For example, in free-living ruby-throated hummingbirds females also have lower levels of defence [@rousseu_resource_2014]. Moreover, although both male and female *Eulampis jugolaris* hummingbirds defend feeding territories during the non-breeding season, males are always dominant over females [@wolf_time_1971; @temeles_foraging_2005]. It would be interesting to better understand why females are less affected by the aggressive resource defence behaviour of dominant males compared to subdominant males and also why females themselves were not able to completely monopolize the profitable patch against other females. Of course, as the sample size of single-sex groups was only one of each, these patterns need to be confirmed with more data. One possibility is that females do not need to defend flowers when a dominant male is already reducing the number of flower visitors and thus increasing the amount of food available.\
+In all mixed sex groups, only one male per group became dominant and successfully defended flowers, whereas in the males-only group two males exhibited dominant behaviour (Fig. \@ref(fig:chasingnectar)A). A closer look at the nectar consumption at each flower revealed that on the last night of the experiment these two males had nearly monopolized different flowers within the same patch rather than sharing access to the same flowers (Fig. \@ref(fig:malesonly)). Such flower partitioning was also observed in the females-only group (Fig. \@ref(fig:femalesonly)), but rarely seen in the mixed groups (Figs. \@ref(fig:mixed1)-\@ref(fig:mixed4)). The successful resource defence by two individuals in the male-only group showed that resource defence can occur independent of the presence of females, but was only based on a single observation.\
+Although the position of the rewarding patch during the clumped resource condition changed between the nights between the left and right, usually the same male continued to successfully defend the patch, especially in the mixed-sex groups (Figs. \@ref(fig:malesonly)-\@ref(fig:mixed4)). This means that males defended the resources themselves and not a particular location. Furthermore, this shows that even after changing the location of the defended patch the same individuals were usually able to succeed in re-establishing their dominance against other males, indicating a stable hierarchy at least for the duration of the experiment.\
+The ability of an individual to successfully defend and monopolize resources is often correlated with distinct physical characteristics for example body size [@searcy_morphological_1979]. However, our results show that weight as an approximation of size did not correlate significantly with the chasing frequency of individuals (Table \@ref(tab:chasesglmm)) and therefore did not predict which male succeeded to defend a flower patch during this study. Another factor that could influence the success in defending flowers is age and therefore experience [@arcese_age_1987; @yasukawa_territory_1979]. Since we could only discriminate between young and adult animals, we cannot dismiss age and experience as a predictor of successful flower defence.\
+In this study, subdominant males received considerably less nectar than dominant males and females (Fig. \@ref(fig:nectarcontrasts)). However, except in mixed group 1, subdominant males were rarely completely excluded from the flower patch and their average nectar intake during the clumped resource condition was still `r mean_intake_subd$mean_intake` $\pm$ `r mean_intake_subd$sd` $mL~h^{-1}$ (mean $\pm$ SD). This result is in accordance with observations of free-living *G. soricina* in Colombia. There, subdominant bats exploited the flowers defended by other individuals as soon as the dominant bat temporarily ceased defending [@lemke_foraging_1984]. Furthermore, in our study the frequency of chasing events decreased significantly during the distributed resource condition in the second part of the night (Table \@ref(tab:chasesglmm)). This supports the theoretical prediction that aggressive defence behaviour increases when resources are spatially concentrated [@grant_spatial_1993], with the important caveat that the sequence of conditions was not controlled in this experiment. With the current data we cannot answer whether the dominant males would successfully defend a patch if the condition changed form distributed to clumped, but we believe this is a different question that should be addressed separately. Resource defence should only occur when the energy gain outweighs the cost of aggressive interactions [@brown_evolution_1964]. Thus, our results could be explained by the decrease in quality of the defended patch once its nectar supply dropped to half. This is also supported by the very low number of chases observed during training. Together, these results suggest that along the different degrees of territorial behaviour, resource defence observed in *G. soricina* seems to represent a transient monopolization of resources instead of a longer-term permanent exclusion of intruders.
 
 # 4. Conclusion
 
@@ -453,11 +449,90 @@ f-\>m appear aggressive\
 m-\>f appear aggressive\
 m-\>m appear aggressive\
 
+(ref:intaketime) The standard deviation of group nectar consumption was used to measure the between individual differences in nectar intake. It was calculated for the clumped (left panel) and the distributed (right panel) resource conditions, separately for males (dashed lines) and females (continuous lines) from each experimental group (different colours). For visualization only, lines give the corresponding fits based on locally weighted scatterplot smoothing (loess). The statistical analysis was based on linear regression.
+
+```{r, intaketime, fig.cap="(ref:intaketime)", fig.width=14}
+# vol_sd_time <- read.csv2(paste0(folder, "IntakeTime.csv"), dec = ".")
+
+vol_sd_time <- vis_summaries %>% 
+  filter(group_night > 0) %>% 
+  group_by(group, IdLabel, phase, sex, group_night) %>%
+  summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur))) %>% 
+  group_by(group, group_night, phase, sex) %>% 
+  summarise(sd_consumed = sd(vol_hr)) %>% 
+  mutate(group2 = paste(group, sex),
+         phase = factor(phase))
+
+vol_sd_time %>% 
+  ggplot(aes(group_night, sd_consumed, color = group)) +
+  geom_point() +
+  geom_smooth(aes(group = group2, linetype = sex), method = "loess", se = FALSE) +
+  facet_grid(. ~ phase, labeller = labeller(phase = c(`1` = "Clumped resource condition",
+                                                      `2` = "Distributed resource condition"))) +
+  scale_color_viridis_d(option = "turbo", labels = c("Mixed Group 1", "Mixed Group 2",
+                                          "Mixed Group 3", "Mixed Group 4",
+                                          "Group 6 Males", "Group 6 Females"),
+                        direction = -1, name = NULL) +
+  scale_linetype_manual(labels = c("Male", "Female"), name = NULL, values=c(2, 1)) +
+  scale_x_continuous(breaks = 1:9) +
+  theme_serif() +
+  labs(x = "Experimental night", y = "Standard deviation of\nnectar intake")
+```
+
+(ref:glicko) Over the last two experimental nights, the males (dark lines and symbols) with the highest proportion of chasing events were also the individuals with the Glicko rating of 1 in each group (panels) during the clumped resource condition. There was no such correspondence for females in the female-only group (right panel).
+
+```{r, glicko, fig.align="center", fig.cap="(ref:glicko)" , fig.height=4, fig.width=12}
+
+group_label <- c("mixed1" = "Mixed\nGroup1",
+                 "mixed2" = "Mixed\nGroup2",
+                 "mixed3" = "Mixed\nGroup3",
+                 "mixed4" = "Mixed\nGroup4",
+                 "6m" = "Male\nGroup",
+                 "6f" = "Female\nGroup")
+chase_nectar %>% 
+  ggplot(aes(glicko_rank, prop_chases, color = sex)) +
+  geom_point() +
+  geom_line() +
+  theme_serif() +
+  scale_color_viridis_d(name = "", labels = c("Male", "Female")) +
+    scale_y_continuous(limits = c(0, 0.0125), breaks = c(0, 0.005, 0.01)) +
+  scale_x_continuous(breaks = 1:6) +
+  facet_grid(. ~ group, labeller = labeller(group = group_label)) +
+  labs(x = "Glicko rating", y = "Proportion chasing")
+```
+
+(ref:chaserchasing) The relationship between proportion of chases versus the proportion of being chased out of all detections over the whole experiment for the female (left) and male (right) individuals in the six experimental groups (different colors).
+
+```{r, chaserchasing, fig.align="center", fig.cap="(ref:chaserchasing)", fig.height=4, fig.width=11}
+
+chase_summ %>% 
+  group_by(IdLabel) %>%
+  mutate(prop_chases = sum(n_chases)/sum(n_detections),
+         prop_chased = sum(n_chased)/sum(n_detections)) %>%
+  ggplot(aes(prop_chases, prop_chased, color = group)) +
+  geom_point(size = 4) +
+  facet_grid(. ~ sex, labeller = labeller(sex = c("f" = "Female", "m" = "Male"))) +
+  scale_color_viridis_d(option = "turbo", labels = c("Mixed Group 1", "Mixed Group 2",
+                                          "Mixed Group 3", "Mixed Group 4",
+                                          "Group 6 Males", "Group 6 Females"),
+                        direction = -1, name = NULL) +
+  scale_x_continuous(breaks = c(0, 0.005, 0.01), labels = c("0", "0.005", "0.01")) +
+  scale_y_continuous(limits = c(0, 0.007), breaks = c(0, 0.005), labels = c("0", "0.005")) +
+  theme_serif() +
+  labs(x = "Proportion chasing", y = "Proportion chased")
+
+
+```
+
+\newpage
+
 (ref:video) Video of the dominant male in mixed group 3 chasing all bats approaching the rewarding flowers in the rewarding patch during the clumped resource condition.
 
 ```{r, video, fig.align="center", fig.cap="(ref:video)"}
 knitr::include_graphics("./images/flower_defence_snapshot.pdf")
 ```
+
+\newpage
 
 (ref:wing) Wing images of a subordinate male from mixed group 4. The same individual was photographed before (**A**) and after the experiment (**B**). The black arrow points to the scarred location due to wing injuries, purportedly caused by the dominant male.
 
@@ -465,36 +540,7 @@ knitr::include_graphics("./images/flower_defence_snapshot.pdf")
 knitr::include_graphics("./images/wing.pdf")
 ```
 
-```{r, nighttable, tab.cap="Experimental schedule for all six groups of bats."}
-# #this table is wrong!
-# 
-# tibble(night = 1:9,  mixed_active = c("L", "R", "R", "L", "L", "R", "L", "L", "R"),
-#        mixed_duration = 6,
-#        male_active = c("L", "R", "L", "L", "R", "L", "R", "R", NA),
-#        male_duration = c(6, 8, 6, 6, 7, 6, 7, 6, NA),
-#        female_active = c("L", "R", "L", "L", "R", "L", "R", NA, NA),
-#        female_duration = c(6, 8, 5, 7, 4, 6, 8, NA, NA)
-#        ) %>% 
-#   flextable() %>% 
-#   set_header_labels(mixed_duration = "duration clumped",
-#                     mixed_active = "active side",
-#                     male_duration = "duration clumped",
-#                     male_active = "active side",
-#                     female_duration = "duration clumped",
-#                     female_active = "active side"
-#                     ) %>% 
-#   add_header_row(values = c("", "Four mixed groups", "Male group", "Female group"),
-#                  colwidths = c(1, 2, 2, 2)) %>%
-#   align_text_col(align = "center", header = TRUE)  %>% 
-#   footnote(i = 2, j = 2:3,
-#             value = as_paragraph(
-#               c("The patch which was active during the clumped phase of the night",
-#                 "How long, in hours, the clumped phase lasted")
-#             ),
-#             ref_symbols = c("a", "b"),
-#             part = "header")
-
-```
+\newpage
 
 (ref:malesonly) Distribution of visits across flowers for the six bats in the males-only group. The coloured bars give the number of visits of each individual at the ten flowers during the clumped (top) and distributed (bottom) resource conditions for each experimental night (columns). The dominant males are shown with a blue border and the subdominant males are shown with a purple border. This was the only group with two males behaving as dominant. On the last night, rather than sharing all flowers within the defended patch, the dominant males partitioned the patch into two subpatches, with each bat defending its own partition.
 

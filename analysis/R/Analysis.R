@@ -3,12 +3,13 @@
 options(digits.secs = 3) # change options to see milliseconds in DateTime 
 
 library(tidyverse)
+library(lubridate)
 library(ggpubr)
-# library(lme4)
-# library(brms)
-# library(bayesplot)
 library(broom.mixed)
 library(MCMCglmm)
+library(PlayerRatings)
+library(ggbeeswarm)
+
 
 folder <- "analysis/data/"
 
@@ -48,17 +49,7 @@ allnights_n <- allnights %>%
            TRUE ~ NA_integer_),
          group = factor(group, levels = c("mixed1", "mixed2", "mixed3", "mixed4", "6m", "6f")),
          sex = factor(sex, levels = c("m", "f"))) %>%
-  select(chase, chased, dur_chase_seq, everything())
-
-# chased_sexes <- conditions %>%
-#   distinct(IdLabel, sex) %>% 
-#   rename(chased = IdLabel,
-#          chased_sex = sex)
-# 
-# allnights_n <- allnights_n %>%
-#   left_join(chased_sexes) %>% 
-#   select(chase, chased, chased_sex, everything()) %>% 
-#   ungroup()
+  select(chase, chased, everything())
 
 phase_durs <- allnights_n %>% 
   filter(n_event == 1 | SystemMsg == "switch") %>% 
@@ -76,132 +67,73 @@ vis_summaries <- allnights_n %>%
   mutate(vis_hour = n/as.numeric(phase_dur),
          ml_hour = vol_consumed/as.numeric(phase_dur))
 
+rev_count <- vis_summaries %>% 
+  filter(cond == "test") %>% 
+  ungroup() %>% 
+  count(group, group_night) %>% 
+  group_by(group) %>% 
+  mutate(n = n():1) %>% 
+  rename(rev_night = n) # reverse count the nights to find the last two nights (different for each group)
+
+vis_summaries <- vis_summaries %>% 
+  ungroup() %>% 
+  left_join(rev_count)
+
 write.table(vis_summaries, file = paste0(folder, "VisitSummary.csv"), sep = ";", row.names = FALSE)
 
 chase_summ <- allnights_n %>% 
-  filter(cond == "test", !is.na(IdLabel)) %>% 
-  group_by(group_night, IdLabel, group, sex, phase) %>% 
+  filter(!is.na(IdLabel), !is.na(cond)) %>% 
+  group_by(group_night, cond, IdLabel, group, sex, phase) %>% 
   summarise(n_detections = n(),
             n_chases = sum(chase),
             prop_chases = n_chases/n_detections)
 
 chased_n <- allnights_n %>% 
   ungroup() %>%
-  filter(cond == "test", !is.na(chased)) %>% 
-  count(group_night, chased, group, phase) %>%
+  filter(!is.na(chased)) %>% 
+  count(cond, group_night, chased, group, phase) %>%
   rename(IdLabel = chased,
          n_chased = n) 
 
-bat_info <- read.csv2(file = paste0(folder, "metadata/bats.csv"),
-                                          header = TRUE, sep = ";", dec = ".", na.strings = "NA")
+bat_info <- read.csv2(file = paste0(folder, "metadata/conditions.csv"),
+                                          header = TRUE, sep = ";", dec = ".", na.strings = "NA") %>%
+  filter(group_night == 5) %>% 
+  group_by(IdLabel) %>% 
+  summarise(weight = mean(weight),
+            sex = sex)
+
+# Glicko rating analysis, based on last two nights only
+
+only_chases <- allnights_n %>%
+  ungroup() %>% 
+  filter(chase == TRUE) %>% 
+  select(cond, group_night, group, IdLabel, chased) %>% 
+  mutate(outcome = 1) %>% 
+  left_join(rev_count) 
+
+gl <- only_chases %>% 
+  filter(rev_night < 3, cond == "test") %>% 
+  select(-rev_night, -cond) %>% 
+  nest_by(group) %>% 
+  mutate(glicko = list(glicko(data))) %>% 
+  select(-data) %>% 
+  mutate(IdLabel = list(pluck(glicko, 1, "Player")))
+
+rankings <- gl %>% 
+  select(-glicko) %>% 
+  unnest(IdLabel) %>% 
+  mutate(glicko_rank = 1:n())
 
 chase_summ <- chase_summ %>% 
   left_join(chased_n) %>%
   left_join(bat_info) %>% 
+  left_join(rankings) %>% 
   replace_na(list(n_chased = 0)) %>% 
   mutate(prop_chased = n_chased / n_detections,
          phase = factor(phase), 
          sex = factor(sex))
 
 write.table(chase_summ, file = paste0(folder, "ChaseSummary.csv"), sep = ";", row.names = FALSE)
-
-
-M_follow1 <- glmer(cbind(n_chases, n_detections) ~ sex * phase + (1|group) + (1|IdLabel) + forearm, 
-                   data = chase_summ, family = "binomial")
-summary(M_follow1)
-M_follow2 <- glmer(cbind(n_chased, n_detections) ~ sex * phase + (1|group) + (1|IdLabel) + forearm, 
-                   data = chase_summ, family = "binomial")
-
-summary(M_follow2)
-
-plot(M_follow2)
-
-# m1 <-
-#   brm(data = chase_summ, family = binomial,
-#       n_chases | trials(n_detections) ~ 1 + sex * phase +
-#         (1 | IdLabel) + (1 | group),
-#       prior = c(prior(normal(0, 10), class = Intercept),
-#                 prior(normal(0, 2), class = b),
-#                 prior(cauchy(0, 1), class = sd)),
-#       sample_prior = "yes",
-#       iter = 2000, warmup = 1000, chains = 4, cores = 6, thin = 3,
-#       control = list(adapt_delta = 0.999, max_treedepth = 13),
-#       seed = 12)
-# summary(m1)
-# 
-# 
-# posterior_summary(m1)
-# 
-# neff_ratio(m1) %>% 
-#   mcmc_neff()  
-# 
-# 
-# mcmc_intervals(m1, 
-#                pars = vars(1:4), 
-#                point_size = 1.75) + 
-#   geom_vline(xintercept = 0) + 
-#   theme_bw()
-# 
-# hypothesis(m1, "sexm:phase2 = 0", alpha = 0.01)
-# 
-# 
-# brm_chases <- m1 %>% tidy()
-# write.table(brm_chases, file = paste0(folder, "brmChases.csv"), sep = ";", row.names = FALSE)
-# 
-# #model summary
-# t1 <- fixef(m1) %>% 
-#   as_tibble() %>% 
-#   mutate("Fixed effect" = c("Intercept", "Sex (male)", "Distributed condition", "Sex-distribution Interaction"), 
-#          Estimate = round(Estimate, digits = 2), 
-#          Q2.5 = round(Q2.5, digits = 2), 
-#          Q97.5 = round(Q97.5, digits = 2)) %>% 
-#   # renaming the credibility intervals column
-#   mutate("95% Credibility intervals" = paste0("[", Q2.5, " , ", Q97.5, "]"))
-# max_xvalue <- t1 %>% 
-#   filter(`Fixed effect` != "Intercept") %>% 
-#   select(Q97.5) %>% 
-#   filter(Q97.5 == max(Q97.5)) %>% 
-#   as.numeric() 
-# max_xvalue <- max_xvalue + 0.3
-# t1_estimates <- t1 %>% 
-#   filter(`Fixed effect` != "Intercept") %>% 
-#   rename(labels = `Fixed effect`) %>% 
-#   select(labels, Estimate, `95% Credibility intervals`) %>% 
-#   mutate(All = paste0(Estimate, " ", `95% Credibility intervals`)) %>% 
-#   select(labels, All)
-# # creating a plot of the slope coefficients 
-# p3 <- mcmc_intervals(m1, 
-#                      pars = vars(1:4), 
-#                      prob_outer = 0.95, 
-#                      point_size = 1.75) + 
-#   xlim (-0.9, max_xvalue + 0.05) +
-#   geom_vline(xintercept = 0) + 
-#   scale_y_discrete(
-#     labels = c("b_sexm" = "Sex",
-#                "b_phase" = "Distributed condition", 
-#                "b_sexm:phase" = "Sex - condition interaction"),
-#     limits = c("b_Day:block", "b_block", "b_Day")) + 
-#   geom_text(data = t1_estimates,
-#             aes(x = max_xvalue, y = c(3, 2, 1), label = All, fontface ="bold"), size = 3)
-# p3 
-# 
-# 
-# m2 <-
-#   brm(data = chase_summ, family = binomial,
-#       n_chased | trials(n_detections) ~ 1 + sex * phase +
-#         (1 | IdLabel) + (1 | group),
-#       prior = c(prior(normal(0, 10), class = Intercept),
-#                 prior(normal(0, 10), class = b),
-#                 prior(cauchy(0, 1), class = sd)),
-#       sample_prior = "yes",
-#       iter = 2000, warmup = 1000, chains = 4, cores = 6, thin = 3,
-#       control = list(adapt_delta = 0.999, max_treedepth = 12),
-#       seed = 12)
-# summary(m2)
-# 
-# brm_chased <- m2 %>% tidy()
-# write.table(brm_chased, file = paste0(folder, "brmChased.csv"), sep = ";", row.names = FALSE)
-
 
 # function for plotting autocorrelations from https://github.com/tmalsburg/MCMCglmm-intro
 plot.acfs <- function(x) {
@@ -246,14 +178,14 @@ prior.1 <- list(R = list(V = 1, nu = 0.002),
 
 #prior.1a<-list(R = list(V=1, nu = 0.002), G = list(G1 = list(V = diag(2), nu = 0.002), 
 #G2 = list(V = 1, nu = 0.002)))
-set.seed(42) #allows you to replicate simulation
+
+set.seed(42)
 mcmc_chases <- MCMCglmm(cbind(n_chases, n_detections - n_chases) ~ sex * phase + weight, 
                      random = ~IdLabel + group,
                      data = as.data.frame(chase_summ), family = "multinomial2", pr = TRUE,
                      prior = prior.1, verbose = FALSE, saveX = TRUE, saveZ = TRUE,
                      nitt = 200E3, thin = 100, burnin = 100E3)
 summary(mcmc_chases)
-
 
 geweke.plot(mcmc_chases$VCV)
 plot.acfs(mcmc_chases$VCV)
@@ -283,75 +215,17 @@ est_chases <- est_chases %>%
 
 write.table(est_chases, file = paste0(folder, "mcmcChases.csv"), sep = ";", row.names = FALSE)
 
-
 # 
-# rev_count <- 
-#   vis_summaries %>% 
-#   filter(cond == "test") %>% 
-#   ungroup() %>% 
-#   count(group, group_night) %>% 
-#   group_by(group) %>% 
-#   mutate(n = n():1) %>% 
-#   rename(rev_night = n) # reverse count the nights to find the last two nights (different for each group)
-
-# statuses <- chase_nectar %>%
-#   ungroup() %>%
-#   mutate(status = factor(case_when(
-#     sex == "f" ~ "Females",
-#     prop_chases > 0.003 & vol_hr > 0.5 ~ "Dominant males",
-#     TRUE ~ "Subdominant males"
-#   ), levels = c("Dominant males", "Females", "Subdominant males"))) %>%
-#   select(IdLabel, status)
+# vol_sd_time <- vis_summaries %>% 
+#   filter(group_night > 0) %>% 
+#   group_by(group, IdLabel, phase, sex, group_night) %>%
+#   summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur))) %>% 
+#   group_by(group, group_night, phase, sex) %>% 
+#   summarise(sd_consumed = sd(vol_hr)) %>% 
+#   mutate(group2 = paste(group, sex),
+#          phase = factor(phase))
 # 
-# cons_contrasts <- vis_summaries %>%
-#   left_join(rev_count) %>%
-#   group_by(group, sex, IdLabel) %>% 
-#   mutate(partition = case_when(
-#     is.na(rev_night) ~ NA_character_,
-#     group_night < 3  & group_night > 0 ~ "First two\n nights",
-#     rev_night < 3 ~ "Last two\n nights",
-#     TRUE ~ NA_character_
-#   ))
-# 
-# cons_contrasts <- cons_contrasts %>% 
-#   ungroup() %>%
-#   filter(!is.na(partition)) %>% 
-#   group_by(group, IdLabel, phase, partition, sex) %>%
-#   summarise(vol_hr = sum(vol_consumed)/sum(phase_dur)) %>% 
-#   left_join(statuses) %>% 
-#   arrange(partition, IdLabel)
-# 
-# 
-# stat.test <- cons_contrasts %>%
-#   group_by(partition, phase) %>%
-#   t_test(vol_hr ~ status) %>% 
-#   adjust_pvalue(method = "holm") %>%
-#   add_significance("p.adj") %>% 
-#   add_xy_position(x = "partition", group = "status")
-# stat.test 
-# 
-# ggboxplot(cons_contrasts, x = "partition", y = "vol_hr",
-#           color = "status", line.color = "gray", line.size = 0.4,
-#           palette = "jco",
-#           add = "jitter",
-#           facet.by = "phase") +
-#   stat_pvalue_manual(
-#     stat.test,  label = "p.adj.signif", tip.length = 0.02, hide.ns = TRUE
-#   ) +
-#   scale_y_continuous(expand = expansion(mult = c(0.05, 0.1))) +
-#   labs(x = "", y = "Nectar intake [ml/h]", color = "")
-
-
-vol_sd_time <- vis_summaries %>% 
-  filter(group_night > 0) %>% 
-  group_by(group, IdLabel, phase, sex, group_night) %>%
-  summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur))) %>% 
-  group_by(group, group_night, phase, sex) %>% 
-  summarise(sd_consumed = sd(vol_hr)) %>% 
-  mutate(group2 = paste(group, sex),
-         phase = factor(phase))
-
-write.table(vol_sd_time, file = paste0(folder, "IntakeTime.csv"), sep = ";", row.names = FALSE)
+# write.table(vol_sd_time, file = paste0(folder, "IntakeTime.csv"), sep = ";", row.names = FALSE)
 
 
 prior.2 <- list(R = list(V = 1, nu = 0.002),
@@ -392,25 +266,10 @@ intake_interactions <- mode_HPD(females_phase2) %>% # for females, no difference
   rbind(mode_HPD(night_phase2)) %>%  # slope of group_night equals zero in phase 2 (distributed resource condition)
   rbind(mode_HPD(sex_phase2)) %>% # no difference between sexes in phase 2 (distributed resource condition)
   as_tibble() %>%
-  mutate(effect = c("females_phase2", "night_phase2", "sex_phase2"))
+  mutate(term = c("females_phase2", "night_phase2", "sex_phase2")) %>% 
+  select(term, everything())
 
 write.table(intake_interactions, file = paste0(folder, "IntakeInteractions.csv"), sep = ";", row.names = FALSE)
-
-# In males there is an inverse proportion between the frequency of initiating
-# a chase event or being chased
-chase_summ %>% 
-  filter(sex == "m") %>%
-  group_by(IdLabel) %>%
-  mutate(prop_chases = sum(n_chases)/sum(n_detections),
-         prop_chased = sum(n_chased)/sum(n_detections)) %>%
-  ggplot(aes(prop_chases, prop_chased, color = group, fill = group)) +
-  geom_point(size = 4) +
-  scale_color_viridis_d(option = "turbo") +
-  theme_serif() +
-  xlim(c(0, 0.01)) +
-  ylim(c(0, 0.007)) +
-  labs(x = "Proportion chasing", y = "Proportion chased")
-
 
 onlyrewarded <- allnights_n %>% 
   left_join(statuses) %>% # statuses calculation in Rmd file!
@@ -421,10 +280,7 @@ onlyrewarded <- allnights_n %>%
 write.table(onlyrewarded, 
             file = paste0(folder,"RewardedVisits.csv"), sep = ";", row.names = FALSE)
 
-
-
-
-### for presentations:
+### Figures for slides in presentations:
 
 cons_clumped <- cons_group1 %>%
   filter(phase == 1) %>%
@@ -462,8 +318,6 @@ cons_distr <- cons_group1 %>%
 
 ggarrange(cons_clumped, cons_distr,
           font.label = list(size = 18, family = "serif"))
-library(ggbeeswarm)
-
 
 fig_chases <- chase_summ %>% 
   filter(phase == 1) %>% 
@@ -545,3 +399,95 @@ ggboxplot(cons_contrasts, x = "phase", y = "vol_hr",
 
 
 flower_distribution(onlyrewarded, "mixed4", phases = "both")
+
+
+chase_males <- chase_nectar %>%
+  filter(sex == "m") %>%
+  ggplot(aes(prop_chases, vol_hr)) +
+  geom_text(aes(label = glicko_rank, color = group), show.legend  = FALSE) +
+  geom_point(aes(color = group), alpha = 0) +
+  scale_color_viridis_d(option = "turbo", name = "Groups", 
+                        labels = c("Mixed Group 1", "Mixed Group 2",
+                                   "Mixed Group 3", "Mixed Group 4",
+                                   "Group 6 Males", "Group 6 Females"),
+                        drop = FALSE, direction = -1) +
+  # geom_point(aes(prop_chases, vol_hr, shape = group), size = 3) +
+  stat_ellipse(data = . %>%  filter(vol_hr > 0.75, prop_chases > 0.003),
+               aes(prop_chases, vol_hr), level = 0.89, linetype = 2) +
+  labs(x = "Proportion of chasing", 
+       title = "Clumped resource condition \n Males",
+       y = expression(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
+  # geom_vline(xintercept = 0.003, linetype = 3) +
+  # geom_hline(yintercept = 0.75, linetype = 3) +
+  ylim(0, 2) + 
+  xlim(0, 0.013) +
+  theme_serif() +
+  theme(legend.text = element_text(size = 18, family = "serif"))  +
+  guides(color = guide_legend(override.aes = list(alpha = 1)))
+
+
+chase_females <- chase_nectar %>%
+  filter(sex == "f") %>% 
+  ggplot(aes(prop_chases, vol_hr)) +
+  geom_text(aes(label = glicko_rank, color = group), show.legend  = FALSE) +
+  geom_point(aes(color = group), alpha = 0) +
+  scale_color_viridis_d(option = "turbo", name = "Groups", 
+                        labels = c("Mixed Group 1", "Mixed Group 2",
+                                   "Mixed Group 3", "Mixed Group 4",
+                                   "Group 6 Males", "Group 6 Females"),
+                        drop = FALSE, direction = -1) +
+  labs(x = "Proportion of chasing", 
+       title = "Clumped resource condition \n Females",
+       y = bquote(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
+  # geom_vline(xintercept = 0.003, linetype = 3) +
+  # geom_hline(yintercept = 0.75, linetype = 3) +
+  ylim(0, 2) + 
+  xlim(0, 0.013) +
+  theme_serif() +
+  theme(legend.text = element_text(size = 18, family = "serif")) +
+  guides(color = guide_legend(override.aes = list(alpha = 1)))
+
+
+ggarrange(chase_males, chase_females, labels = c("A", "B"),
+          font.label = list(size = 18, family = "serif"),
+          common.legend = TRUE, legend = "right")
+
+
+# defending on nights when switch happened earlier/later
+allnights_n %>%
+  ungroup() %>% 
+  filter(cond == "test", chase == TRUE) %>% 
+  mutate(hour = factor(hour(DateTime),
+                       levels = c(15:23, 0:14))) %>% 
+  count(group, night, group_night, hour) %>% 
+  left_join(filter(phase_durs, phase == 1)) %>% 
+  mutate(phase_dur = as.numeric(round(phase_dur)) + 1) %>% 
+  ggplot(aes(hour, n, color = group, group = group)) +
+  geom_point() +
+  geom_line() +
+  scale_x_discrete(breaks = c(16, 18, 20, 22, 0, 2, 4)) +
+  scale_color_viridis_d(option = "turbo", direction = -1) +
+  facet_grid(group ~ group_night, labeller = label_both) +
+  geom_vline(aes(xintercept = phase_dur), linetype = 2) +
+  guides(color = FALSE)
+
+allnights_n %>%
+  ungroup() %>% 
+  filter(group_night == 0, chase == TRUE) %>% 
+  count(group) %>% 
+  ggplot(aes(group, n, fill = group)) +
+  geom_col() +
+  scale_fill_viridis_d(option = "turbo", direction = -1, guide = FALSE) +
+  scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2", "Mixed \n Group3",
+                              "Mixed \n Group4", "Male \n Group", "Female \n Group")) +
+  labs(x = "", y = "Total chases in training") +
+  theme_serif()
+
+lastnight_f <- read.csv2(file = paste0(folder, "raw/group6f/", "Day10_AllActive_Group2-15.03.26.csv"),
+                         sep = ";", dec = ",", header = TRUE,
+                         fileEncoding = "UTF-16LE", as.is = TRUE, row.names = NULL) %>% 
+  filter(!str_detect(DateTime, "#")) %>% 
+  arrange(DateTime) %>% #sort chronologically
+  mutate(DateTime = as.numeric(str_replace(DateTime, ",", ".")),
+         DateTime = as.POSIXct(DateTime * (60 * 60 * 24),
+                               origin = "1899-12-30", tz = "UTC"))
