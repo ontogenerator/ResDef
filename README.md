@@ -147,8 +147,8 @@ This file is user-generated, providing relevant experimental information not pre
 |weight      |Weight in grams, taken before the beginning of the experiment|
 |sex         |"m" for male and "f" for female|
 |group       |experimental group, either "6m", "6f", or "mixed1" through "mixed4"|
-|discard     |1 if data for particular night and mouse is to be discarded from analysis, 0 otherwise|
-|cond         |Experimental condition. Before the main experiment ("test"), mice were in a "train" condition, in which all flower visits were rewarded and the two flower patches were not spatially separated|
+|discard     |0 if there were no issues on that night; 1 if data are to be discarded from analysis completely, otherwise time period given as e.g. ">22:00" removes all data after the time entered|
+|cond        |Experimental condition. Before the main experiment ("test"), mice were in a "train" condition, in which all flower visits were rewarded and the two flower patches were not spatially separated|
 
 ## 9. Content of "metadata/masterTable.csv" file
 This file is user-generated and allows mapping the raw csv files to the respective experimental nights.
