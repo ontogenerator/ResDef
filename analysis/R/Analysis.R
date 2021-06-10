@@ -9,8 +9,7 @@ library(broom.mixed)
 library(MCMCglmm)
 library(PlayerRatings)
 library(ggbeeswarm)
-
-
+library(ggpattern)
 folder <- "analysis/data/"
 
 # File too large to upload to github, so needs to be generated first with script in load.R
@@ -117,11 +116,12 @@ gl <- only_chases %>%
   nest_by(group) %>% 
   mutate(glicko = list(glicko(data))) %>% 
   select(-data) %>% 
-  mutate(IdLabel = list(pluck(glicko, 1, "Player")))
+  mutate(IdLabel = list(pluck(glicko, 1, "Player")),
+         glicko_rating = list(pluck(glicko, 1, "Rating")))
 
 rankings <- gl %>% 
   select(-glicko) %>% 
-  unnest(IdLabel) %>% 
+  unnest(c(IdLabel, glicko_rating)) %>% 
   mutate(glicko_rank = 1:n())
 
 chase_summ <- chase_summ %>% 
@@ -216,15 +216,17 @@ est_chases <- est_chases %>%
 write.table(est_chases, file = paste0(folder, "mcmcChases.csv"), sep = ";", row.names = FALSE)
 
 # 
-# vol_sd_time <- vis_summaries %>% 
-#   filter(group_night > 0) %>% 
-#   group_by(group, IdLabel, phase, sex, group_night) %>%
-#   summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur))) %>% 
-#   group_by(group, group_night, phase, sex) %>% 
-#   summarise(sd_consumed = sd(vol_hr)) %>% 
-#   mutate(group2 = paste(group, sex),
-#          phase = factor(phase))
-# 
+vol_sd_time <- vis_summaries %>%
+  filter(group_night > 0) %>%
+  group_by(group, IdLabel, phase, sex, group_night) %>%
+  summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur))) %>%
+  group_by(group, group_night, phase, sex) %>%
+  summarise(sd_consumed = sd(vol_hr)) %>%
+  mutate(group2 = paste(group, sex),
+         phase = factor(phase)) %>% 
+  ungroup() %>% 
+  mutate(night = scale(group_night, center = TRUE, scale = FALSE))
+
 # write.table(vol_sd_time, file = paste0(folder, "IntakeTime.csv"), sep = ";", row.names = FALSE)
 
 
@@ -233,13 +235,14 @@ prior.2 <- list(R = list(V = 1, nu = 0.002),
 
 #prior.1a<-list(R = list(V=1, nu = 0.002), G = list(G1 = list(V = diag(2), nu = 0.002), 
 #G2 = list(V = 1, nu = 0.002)))
-set.seed(815) #allows you to replicate simulation
-mcmc_vol_time <- MCMCglmm(sd_consumed ~ sex + phase + group_night +
-                            sex:phase + group_night:phase + sex:group_night, 
-                        random = ~us(1 + group_night):group,
+
+set.seed(815) 
+mcmc_vol_time <- MCMCglmm(sd_consumed ~ sex + phase + night +
+                            sex*phase*night, 
+                        random = ~us(1 + night):group,
                         data = as.data.frame(vol_sd_time), family = "gaussian", pr = TRUE,
                         prior = prior.2, verbose = FALSE, saveX = TRUE, saveZ = TRUE,
-                        nitt = 200E3, thin = 100, burnin = 100E3)
+                        nitt = 200E4, thin = 1000, burnin = 100E3)
 summary(mcmc_vol_time)
 
 geweke.plot(mcmc_vol_time$VCV)
@@ -259,15 +262,47 @@ mode_HPD <- function(mcmc) {
 }
 
 females_phase2 <- mcmc_vol_time$Sol[, "sexf"] + mcmc_vol_time$Sol[, "sexf:phase2"]
-night_phase2 <- mcmc_vol_time$Sol[, "group_night"] + mcmc_vol_time$Sol[, "phase2:group_night"] 
+night_phase2 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "phase2:night"] 
 sex_phase2 <- mcmc_vol_time$Sol[, "phase2"] + mcmc_vol_time$Sol[, "sexf:phase2"]
-  
+sex_night_phase2 <- mcmc_vol_time$Sol[, "sexf:phase2:night"] +  mcmc_vol_time$Sol[, "phase2:night"]
+females_nightph1 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "sexf:night"]
+females_nightph2 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "sexf:night"] + 
+  mcmc_vol_time$Sol[, "phase2:night"] +  mcmc_vol_time$Sol[, "sexf:phase2:night"]
+females_night_contrast <- females_nightph2 - females_nightph1
+
 intake_interactions <- mode_HPD(females_phase2) %>% # for females, no difference between resource conditions
-  rbind(mode_HPD(night_phase2)) %>%  # slope of group_night equals zero in phase 2 (distributed resource condition)
+  rbind(mode_HPD(night_phase2)) %>%  # slope of night for males equals zero in phase 2 (distributed resource condition)
   rbind(mode_HPD(sex_phase2)) %>% # no difference between sexes in phase 2 (distributed resource condition)
+  rbind(mode_HPD(sex_night_phase2)) %>% # no difference in slopes between sexes in phase 2 either
+  rbind(mode_HPD(females_nightph1)) %>% # no effect of night in females in clumped
+  rbind(mode_HPD(females_nightph2)) %>% # nor in distributed condition
+  rbind(mode_HPD(females_night_contrast)) %>% # no difference in slope for females between conditions
   as_tibble() %>%
-  mutate(term = c("females_phase2", "night_phase2", "sex_phase2")) %>% 
+  mutate(term = c("females_phase2", "night_phase2", "sex_phase2",
+                  "sex_night_phase2", "females_night", "females_night_phase2",
+                  "females_night_contrast")) %>% 
   select(term, everything())
+
+predicted <- predict(mcmc_vol_time, type = "response", posterior = "mode") %>% as.vector()
+predicted <- tibble(predicted = predicted)
+vol_sd_time %>% 
+  # filter(!str_detect(group, "6")) %>% 
+  bind_cols(predicted) %>% 
+  ggplot(aes(group_night, predicted, color = group)) +
+  # ggplot(aes(group_night, sd_consumed, color = group)) +
+  geom_point() +
+  geom_smooth(aes(group = group2, linetype = sex), method = "lm") +
+  facet_grid(. ~ phase, labeller = labeller(phase = c(`1` = "Clumped resource condition",
+                                                      `2` = "Distributed resource condition"))) +
+  scale_color_viridis_d(option = "turbo", labels = c("Mixed Group 1", "Mixed Group 2",
+                                                     "Mixed Group 3", "Mixed Group 4",
+                                                     "Males-only Group", "Females-only Group"),
+                        direction = -1, name = NULL) +
+  scale_linetype_manual(labels = c("Male", "Female"), name = NULL, values=c(2, 1)) +
+  scale_x_continuous(breaks = 1:9) +
+  ylim(c(0, 1)) +
+  theme_serif() +
+  labs(x = "Experimental night", y = "Standard deviation of\nnectar intake")
 
 write.table(intake_interactions, file = paste0(folder, "IntakeInteractions.csv"), sep = ";", row.names = FALSE)
 
@@ -398,8 +433,6 @@ ggboxplot(cons_contrasts, x = "phase", y = "vol_hr",
   theme_serif()
 
 
-flower_distribution(onlyrewarded, "mixed4", phases = "both")
-
 
 chase_males <- chase_nectar %>%
   filter(sex == "m") %>%
@@ -452,6 +485,7 @@ ggarrange(chase_males, chase_females, labels = c("A", "B"),
           font.label = list(size = 18, family = "serif"),
           common.legend = TRUE, legend = "right")
 
+######## Analyses made to answer questions from reviewers
 
 # defending on nights when switch happened earlier/later
 allnights_n %>%
@@ -465,6 +499,28 @@ allnights_n %>%
   ggplot(aes(hour, n, color = group, group = group)) +
   geom_point() +
   geom_line() +
+  ylab("total_chases") +
+  scale_x_discrete(breaks = c(16, 18, 20, 22, 0, 2, 4)) +
+  scale_color_viridis_d(option = "turbo", direction = -1) +
+  facet_grid(group ~ group_night, labeller = label_both) +
+  geom_vline(aes(xintercept = phase_dur), linetype = 2) +
+  guides(color = FALSE)
+
+
+allnights_n %>%
+  ungroup() %>% 
+  filter(cond == "test", chase == TRUE) %>% 
+  left_join(statuses) %>% 
+  filter(status == "Dominant males") %>% 
+  mutate(hour = factor(hour(DateTime),
+                       levels = c(15:23, 0:14))) %>% 
+  count(group, night, group_night, hour) %>% 
+  left_join(filter(phase_durs, phase == 1)) %>% 
+  mutate(phase_dur = as.numeric(round(phase_dur)) + 1) %>% 
+  ggplot(aes(hour, n, color = group, group = group)) +
+  geom_point() +
+  geom_line() +
+  ylab("chases_by_dominant") +
   scale_x_discrete(breaks = c(16, 18, 20, 22, 0, 2, 4)) +
   scale_color_viridis_d(option = "turbo", direction = -1) +
   facet_grid(group ~ group_night, labeller = label_both) +
@@ -491,3 +547,383 @@ lastnight_f <- read.csv2(file = paste0(folder, "raw/group6f/", "Day10_AllActive_
   mutate(DateTime = as.numeric(str_replace(DateTime, ",", ".")),
          DateTime = as.POSIXct(DateTime * (60 * 60 * 24),
                                origin = "1899-12-30", tz = "UTC"))
+
+sex_info <- bat_info %>% 
+  select(-weight) %>% 
+  rename(chased = IdLabel,
+         sex_chased = sex)
+
+only_chases %>% 
+  left_join(bat_info) %>% 
+  left_join(sex_info) %>% 
+  filter(!str_detect(group, "6")) %>% 
+  group_by(IdLabel, sex, group) %>% 
+  summarise(prop_chased_males = mean(sex_chased == "m"),
+            prop_chased_females = mean(sex_chased == "f")) %>% 
+  ggplot(aes(group, prop_chased_males, color = sex)) +
+  geom_jitter(width = 0.2) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_serif() +
+  scale_color_viridis_d(direction = -1)
+
+
+only_chases %>% 
+  filter(group_night > 0) %>% 
+  left_join(bat_info) %>% 
+  left_join(sex_info) %>% 
+  left_join(statuses) %>% 
+  count(group_night, IdLabel, sex, status, group) %>%
+  ggplot(aes(group_night, n, color = status, group = IdLabel)) +
+  geom_jitter(width = 0.2) +
+  scale_x_continuous(breaks = 1:9) +
+  ylab("Total number of chases") +
+  geom_line() +
+  facet_wrap(~group) +
+  theme_serif() +
+  scale_color_viridis_d(direction = -1)
+
+allnights_n %>% 
+  filter(group_night > 0) %>% 
+  count(IdLabel, group_night, group) %>% 
+  left_join(bat_info) %>% 
+  left_join(statuses) %>% 
+  ggplot(aes(group_night, n, color = status, group = IdLabel)) +
+  geom_jitter(width = 0.2) +
+  scale_x_continuous(breaks = 1:9) +
+  ylab("Total number of detections") +
+  geom_line() +
+  facet_wrap(~group) +
+  theme_serif() +
+  scale_color_viridis_d(direction = -1)
+
+
+
+#being chased vs nectar intake
+
+chase_nectar <- chase_summ %>% 
+  filter(phase == 1, cond == "test") %>% 
+  group_by(group, sex, IdLabel, glicko_rank, glicko_rating) %>% 
+  summarise(prop_chases = sum(n_chases)/sum(n_detections),
+            prop_chased = sum(n_chased)/sum(n_detections),
+            n_chases = sum(n_chases),
+            n_chased = sum(n_chased)) %>% 
+  left_join(intake_lastnights_clumped)
+
+
+chased_males <- chase_nectar %>%
+  filter(sex == "m") %>% 
+  ggplot() +
+  geom_point(aes(prop_chased, vol_hr, shape = group), size = 3) +
+  stat_ellipse(data = . %>%  filter(vol_hr > 0.75, prop_chases > 0.003),
+               aes(prop_chases, vol_hr), level = 0.89, linetype = 2) +
+  scale_shape_manual("Groups", labels = c("Mixed Group 1", "Mixed Group 2",
+                                          "Mixed Group 3", "Mixed Group 4",
+                                          "Males-only Group", "Females-only Group"),
+                     values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
+  labs(x = "Proportion of being chased", 
+       title = "Clumped resource condition \n Males",
+       y = expression(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
+  # geom_vline(xintercept = 0.003, linetype = 3) +
+  # geom_hline(yintercept = 0.75, linetype = 3) +
+  ylim(0, 2) + 
+  xlim(0, 0.013) +
+  theme_serif() +
+  theme(legend.text = element_text(size = 18, family = "serif"))
+
+
+
+chased_females <- chase_nectar %>%
+  filter(sex == "f") %>% 
+  ggplot(aes(prop_chased, vol_hr, shape = group)) +
+  geom_point(size = 3) +
+  scale_shape_manual("Groups", labels = c("Mixed Group 1", "Mixed Group 2",
+                                          "Mixed Group 3", "Mixed Group 4",
+                                          "Males-only Group", "Females-only Group"),
+                     values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
+  labs(x = "Proportion of being chased", 
+       title = "Clumped resource condition \n Females",
+       y = bquote(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
+  # geom_vline(xintercept = 0.003, linetype = 3) +
+  # geom_hline(yintercept = 0.75, linetype = 3) +
+  ylim(0, 2) + 
+  xlim(0, 0.013) +
+  theme_serif() +
+  theme(legend.text = element_text(size = 18, family = "serif"))
+
+ggarrange(chased_males, chased_females, labels = c("A", "B"),
+          font.label = list(size = 18, family = "serif"),
+          common.legend = TRUE, legend = "right")
+
+
+chased_males <- chase_nectar %>%
+  filter(sex == "m") %>% 
+  ggplot() +
+  geom_point(aes(n_chased, vol_hr, shape = group), size = 3) +
+  stat_ellipse(data = . %>%  filter(vol_hr > 0.75, prop_chases > 0.003),
+               aes(prop_chases, vol_hr), level = 0.89, linetype = 2) +
+  scale_shape_manual("Groups", labels = c("Mixed Group 1", "Mixed Group 2",
+                                          "Mixed Group 3", "Mixed Group 4",
+                                          "Males-only Group", "Females-only Group"),
+                     values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
+  labs(x = "# being chased", 
+       title = "Clumped resource condition \n Males",
+       y = expression(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
+  # geom_vline(xintercept = 0.003, linetype = 3) +
+  # geom_hline(yintercept = 0.75, linetype = 3) +
+  ylim(0, 2) + 
+  # xlim(0, 0.013) +
+  theme_serif() +
+  theme(legend.text = element_text(size = 18, family = "serif"))
+
+
+
+chased_females <- chase_nectar %>%
+  filter(sex == "f") %>% 
+  ggplot(aes(n_chased, vol_hr, shape = group)) +
+  geom_point(size = 3) +
+  scale_shape_manual("Groups", labels = c("Mixed Group 1", "Mixed Group 2",
+                                          "Mixed Group 3", "Mixed Group 4",
+                                          "Males-only Group", "Females-only Group"),
+                     values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
+  labs(x = "# being chased", 
+       title = "Clumped resource condition \n Females",
+       y = bquote(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
+  # geom_vline(xintercept = 0.003, linetype = 3) +
+  # geom_hline(yintercept = 0.75, linetype = 3) +
+  ylim(0, 2) + 
+  # xlim(0, 0.013) +
+  theme_serif() +
+  theme(legend.text = element_text(size = 18, family = "serif"))
+
+ggarrange(chased_males, chased_females, labels = c("A", "B"),
+          font.label = list(size = 18, family = "serif"),
+          common.legend = TRUE, legend = "right")
+
+
+# total n chases vs nectar intake
+
+
+chases_males <- chase_nectar %>%
+  filter(sex == "m") %>% 
+  ggplot() +
+  geom_point(aes(n_chases, vol_hr, shape = group), size = 3) +
+  stat_ellipse(data = . %>%  filter(vol_hr > 0.75, prop_chases > 0.003),
+               aes(prop_chases, vol_hr), level = 0.89, linetype = 2) +
+  scale_shape_manual("Groups", labels = c("Mixed Group 1", "Mixed Group 2",
+                                          "Mixed Group 3", "Mixed Group 4",
+                                          "Males-only Group", "Females-only Group"),
+                     values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
+  labs(x = "# chasing", 
+       title = "Clumped resource condition \n Males",
+       y = expression(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
+  # geom_vline(xintercept = 0.003, linetype = 3) +
+  # geom_hline(yintercept = 0.75, linetype = 3) +
+  ylim(0, 2) + 
+  # xlim(0, 0.013) +
+  theme_serif() +
+  theme(legend.text = element_text(size = 18, family = "serif"))
+
+
+
+chases_females <- chase_nectar %>%
+  filter(sex == "f") %>% 
+  ggplot(aes(n_chases, vol_hr, shape = group)) +
+  geom_point(size = 3) +
+  scale_shape_manual("Groups", labels = c("Mixed Group 1", "Mixed Group 2",
+                                          "Mixed Group 3", "Mixed Group 4",
+                                          "Males-only Group", "Females-only Group"),
+                     values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
+  labs(x = "# chasing", 
+       title = "Clumped resource condition \n Females",
+       y = bquote(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
+  # geom_vline(xintercept = 0.003, linetype = 3) +
+  # geom_hline(yintercept = 0.75, linetype = 3) +
+  ylim(0, 2) + 
+  # xlim(0, 0.013) +
+  theme_serif() +
+  theme(legend.text = element_text(size = 18, family = "serif"))
+
+ggarrange(chases_males, chases_females, labels = c("A", "B"),
+          font.label = list(size = 18, family = "serif"),
+          common.legend = TRUE, legend = "right")
+## first vs. second night
+
+p_crit <- 0.1
+
+cons_contrasts <- vis_summaries %>%
+  filter(group_night < 3) %>% 
+  group_by(group, sex, IdLabel) %>% 
+  mutate(partition = case_when(
+    group_night == 1 ~ "First night",
+    group_night == 2 ~ "Second night",
+    TRUE ~ NA_character_
+  ),
+  partition = factor(partition, levels = c("First night", "Second night")),
+  phase = factor(phase, labels = c("Clumped resource\ncondition",
+                                   "Distributed resource\ncondition")))
+
+cons_contrasts <- cons_contrasts %>% 
+  ungroup() %>%
+  filter(!is.na(partition)) %>% 
+  group_by(group, IdLabel, phase, partition, sex) %>%
+  summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur))) %>% 
+  left_join(statuses) %>% 
+  arrange(partition, IdLabel)
+
+stat.test <- cons_contrasts %>%
+  group_by(status, phase) %>%
+  t_test(vol_hr ~ partition) %>% 
+  adjust_pvalue(method = "holm") %>%
+  add_significance("p.adj") %>% 
+  add_xy_position(x = "partition", group = "status", fun = "max") %>% 
+  filter(p.adj < p_crit) %>% 
+  mutate(p.adj = ifelse(p.adj < 0.001, "<0.001", round(p.adj, 3)))
+
+ggboxplot(cons_contrasts, x = "partition", y = "vol_hr",
+          color = "status", line.color = "gray", line.size = 0.4,
+          palette = c("dodgerblue3","grey50","purple"),
+          add = "jitter") +
+  facet_grid(. ~ phase) +
+  # stat_pvalue_manual(
+  #   stat.test,  label = "p.adj.signif", tip.length = 0.02, hide.ns = TRUE
+  # ) +
+  stat_pvalue_manual(
+    stat.test,  label = "p.adj", tip.length = 0.02
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.1))) +
+  labs(x = "", y = bquote("Nectar intake ["~mL~h^-1*"]"), color = "") +
+  theme_serif()
+
+
+mean_intake_all <- vis_summaries %>% 
+  filter(cond == "test", phase == 1) %>% 
+  group_by(group_night, IdLabel) %>% 
+  summarise(vol_hr = sum(vol_consumed)/sum(phase_dur)) %>% 
+  group_by(IdLabel) %>% 
+  summarise(mean_vol_hr = mean(vol_hr)) %>% 
+  summarise(mean_intake = round(mean(mean_vol_hr), 2),
+            sd = round(sd(mean_vol_hr), 2))
+
+
+### overall Glicko (not only last two nights)
+
+gl <- only_chases %>% 
+  filter(cond == "test") %>% 
+  select(-rev_night, -cond) %>% 
+  nest_by(group) %>% 
+  mutate(glicko = list(glicko(data))) %>% 
+  select(-data) %>% 
+  mutate(IdLabel = list(pluck(glicko, 1, "Player")),
+         glicko_rating = list(pluck(glicko, 1, "Rating")))
+
+rankings <- gl %>% 
+  select(-glicko) %>% 
+  unnest(c(IdLabel, glicko_rating)) %>% 
+  mutate(glicko_rank = 1:n())
+
+chase_summ_all <- chase_summ %>% 
+  left_join(chased_n) %>%
+  left_join(bat_info) %>% 
+  left_join(rankings) %>% 
+  replace_na(list(n_chased = 0)) %>% 
+  mutate(prop_chased = n_chased / n_detections,
+         phase = factor(phase), 
+         sex = factor(sex))
+glicko_all <- chase_summ_all %>% 
+  # select(glicko_rank) %>% 
+  rename(glicko_all = glicko_rank) %>% 
+  ungroup() %>% 
+  select(glicko_all)
+
+chase_summ %>% 
+  left_join(rankings) %>% 
+  left_join(statuses) %>% 
+  bind_cols(glicko_all) %>%
+  ggplot(aes(glicko_all, glicko_rank, color = status)) +
+  geom_point() +
+  facet_wrap(~group) +
+  geom_abline()
+
+# show dom female on boxplot, why not same as other plot?
+
+dom_female <- chase_nectar %>% 
+  ungroup() %>% 
+  mutate(status = factor(case_when(
+    prop_chases > 0.003 & vol_hr > 0.75 ~ "Dominant",
+    TRUE ~ "Subordinate"
+  ), levels = c("Dominant", "Subordinate"))) %>%
+  select(IdLabel, status, sex) %>% 
+  filter(sex == "f", status == "Dominant")
+
+dom_f_intake <- cons_contrasts %>% 
+  filter(IdLabel == dom_female$IdLabel)
+
+ggboxplot(cons_contrasts, x = "phase", y = "vol_hr",
+          color = "status", line.color = "gray", line.size = 0.4,
+          palette = c("dodgerblue3","grey50","purple"),
+          add = "jitter") +
+  facet_grid(. ~ partition) +
+  geom_point(data = dom_f_intake, color = "red") +
+  xlab("")
+
+
+flower_distribution <- function(tib, groupname, phases) {
+  if (phases != "both") {
+    tib <- tib %>% 
+      filter(phase == phases)
+  }
+  tib <- tib %>% 
+    ungroup() %>%
+    filter(group == groupname) %>%
+    rename(night = group_night) %>%
+    count(loc, IdLabel, status, night, phase)
+  
+  plt <- tib %>% 
+    ggplot(aes(loc, n, fill = IdLabel, color = status)) +
+    geom_col() +
+    scale_fill_viridis_d(option = "turbo", guide = FALSE) +
+    scale_color_manual(values = 
+                         c("Females" = NA,
+                           "Dominant males" = "blue",
+                           "Subordinate males" = "purple"),
+                       guide = FALSE) +
+    scale_x_continuous(breaks = 1:10) +
+    theme_serif() +
+    theme(axis.text.x = element_text(size = 14, family = "serif")) +
+    labs(x = "Flower", y = "Number of rewarded visits")
+  if (phases != "both") {
+    return(plt + facet_wrap(~night))
+  } else {
+    return(plt + facet_grid(phase ~ night,
+                            labeller = labeller(night = label_both,
+                                                phase = phase_label)))
+  }
+  
+}
+
+flower_distribution(onlyrewarded, "6m", phases = "both")
+
+
+onlyrewarded %>% 
+  filter(group == "mixed1") %>%
+  rename(night = group_night) %>%
+  count(loc, IdLabel, status, night, phase) %>% 
+  ggplot(aes(loc, n)) +
+  geom_col_pattern(aes(fill = IdLabel, pattern = status, pattern_fill = status),
+                   pattern_density = 0.1) +
+  # scale_color_manual(values = 
+  #                      c("Females" = NA,
+  #                        "Dominant males" = "black",
+  #                        "Subordinate males" = "white"),
+  #                    guide = FALSE) +
+  scale_pattern_manual(values = c("Females" = "none",
+                                       "Dominant males" = "stripe",
+                                       "Subordinate males" = "stripe")) +
+  scale_pattern_fill_manual(values = c("Females" = "none",
+                                  "Dominant males" = "black",
+                                  "Subordinate males" = "white")) +
+  scale_fill_viridis_d(option = "turbo", guide = FALSE) +
+  facet_grid(phase ~ night,
+             labeller = labeller(night = label_both,
+                                 phase = phase_label))
+  
