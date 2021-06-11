@@ -227,7 +227,7 @@ vol_sd_time <- vis_summaries %>%
   ungroup() %>% 
   mutate(night = scale(group_night, center = TRUE, scale = FALSE))
 
-# write.table(vol_sd_time, file = paste0(folder, "IntakeTime.csv"), sep = ";", row.names = FALSE)
+write.table(vol_sd_time, file = paste0(folder, "IntakeTime.csv"), sep = ";", row.names = FALSE)
 
 
 prior.2 <- list(R = list(V = 1, nu = 0.002),
@@ -260,17 +260,21 @@ write.table(est_vol_time, file = paste0(folder, "mcmcIntakeTime.csv"), sep = ";"
 mode_HPD <- function(mcmc) {
   round(c(posterior.mode(mcmc), HPDinterval(mcmc)), 2) %>% set_names(c("estimate", "conf.low", "conf.high"))
 }
+# mp2 <- int + phase2
+# fp2 <- int + phase2 + sexf + sexfphase2
+# mslp2 <- night + phase2night
+# fslp2 <- night + phase2night + sexfnight + sexfnightphase2
 
-females_phase2 <- mcmc_vol_time$Sol[, "sexf"] + mcmc_vol_time$Sol[, "sexf:phase2"]
-night_phase2 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "phase2:night"] 
-sex_phase2 <- mcmc_vol_time$Sol[, "phase2"] + mcmc_vol_time$Sol[, "sexf:phase2"]
-sex_night_phase2 <- mcmc_vol_time$Sol[, "sexf:phase2:night"] +  mcmc_vol_time$Sol[, "phase2:night"]
-females_nightph1 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "sexf:night"]
+sex_phase2 <- mcmc_vol_time$Sol[, "sexf"] + mcmc_vol_time$Sol[, "sexf:phase2"] # checks out
+night_phase2 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "phase2:night"] # checks out
+females_phase2 <- mcmc_vol_time$Sol[, "phase2"] + mcmc_vol_time$Sol[, "sexf:phase2"] # checks out
+sex_night_phase2 <- -(mcmc_vol_time$Sol[, "sexf:phase2:night"] +  mcmc_vol_time$Sol[, "sexf:night"]) # checks out
+females_nightph1 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "sexf:night"] # checks out
 females_nightph2 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "sexf:night"] + 
-  mcmc_vol_time$Sol[, "phase2:night"] +  mcmc_vol_time$Sol[, "sexf:phase2:night"]
+  mcmc_vol_time$Sol[, "phase2:night"] +  mcmc_vol_time$Sol[, "sexf:phase2:night"] # double check!
 females_night_contrast <- females_nightph2 - females_nightph1
 
-intake_interactions <- mode_HPD(females_phase2) %>% # for females, no difference between resource conditions
+intake_interactions <- mode_HPD(females_phase2) %>% # for females, sign. difference between resource conditions
   rbind(mode_HPD(night_phase2)) %>%  # slope of night for males equals zero in phase 2 (distributed resource condition)
   rbind(mode_HPD(sex_phase2)) %>% # no difference between sexes in phase 2 (distributed resource condition)
   rbind(mode_HPD(sex_night_phase2)) %>% # no difference in slopes between sexes in phase 2 either
@@ -866,64 +870,12 @@ ggboxplot(cons_contrasts, x = "phase", y = "vol_hr",
   geom_point(data = dom_f_intake, color = "red") +
   xlab("")
 
+onlychoices <- allnights_n %>% 
+  left_join(statuses) %>% # statuses calculation in Rmd file!
+  ungroup() %>% 
+  filter(cond == "test", !is.na(IdLabel), choice == TRUE) %>% 
+  select(group_night, IdLabel, status, group, DateTime, loc, phase)
 
-flower_distribution <- function(tib, groupname, phases) {
-  if (phases != "both") {
-    tib <- tib %>% 
-      filter(phase == phases)
-  }
-  tib <- tib %>% 
-    ungroup() %>%
-    filter(group == groupname) %>%
-    rename(night = group_night) %>%
-    count(loc, IdLabel, status, night, phase)
-  
-  plt <- tib %>% 
-    ggplot(aes(loc, n, fill = IdLabel, color = status)) +
-    geom_col() +
-    scale_fill_viridis_d(option = "turbo", guide = FALSE) +
-    scale_color_manual(values = 
-                         c("Females" = NA,
-                           "Dominant males" = "blue",
-                           "Subordinate males" = "purple"),
-                       guide = FALSE) +
-    scale_x_continuous(breaks = 1:10) +
-    theme_serif() +
-    theme(axis.text.x = element_text(size = 14, family = "serif")) +
-    labs(x = "Flower", y = "Number of rewarded visits")
-  if (phases != "both") {
-    return(plt + facet_wrap(~night))
-  } else {
-    return(plt + facet_grid(phase ~ night,
-                            labeller = labeller(night = label_both,
-                                                phase = phase_label)))
-  }
-  
-}
+flower_distribution(onlychoices, "6m", phases = "both")
 
-flower_distribution(onlyrewarded, "6m", phases = "both")
-
-
-onlyrewarded %>% 
-  filter(group == "mixed1") %>%
-  rename(night = group_night) %>%
-  count(loc, IdLabel, status, night, phase) %>% 
-  ggplot(aes(loc, n)) +
-  geom_col_pattern(aes(fill = IdLabel, pattern = status, pattern_fill = status),
-                   pattern_density = 0.1) +
-  # scale_color_manual(values = 
-  #                      c("Females" = NA,
-  #                        "Dominant males" = "black",
-  #                        "Subordinate males" = "white"),
-  #                    guide = FALSE) +
-  scale_pattern_manual(values = c("Females" = "none",
-                                       "Dominant males" = "stripe",
-                                       "Subordinate males" = "stripe")) +
-  scale_pattern_fill_manual(values = c("Females" = "none",
-                                  "Dominant males" = "black",
-                                  "Subordinate males" = "white")) +
-  scale_fill_viridis_d(option = "turbo", guide = FALSE) +
-  facet_grid(phase ~ night,
-             labeller = labeller(night = label_both,
-                                 phase = phase_label))
-  
+# not much gained by these alternative visualizations

@@ -64,10 +64,12 @@ library(tidyverse)
 library(flextable)
 library(rstatix)
 library(ggbeeswarm)
+library(ggpattern)
 
 folder <- "data/"
 
-theme_serif <- function() {
+
+theme_serif <- function() { # consistent serif look for all plots
   theme_pubr() +
     theme(axis.text = element_text(size = 20, family = "serif"),
         axis.line = element_line(colour = "black", size = 1),
@@ -79,7 +81,7 @@ theme_serif <- function() {
 }
 
 
-report_m_ci <- function(tbl, par = "_r_", brackets = "round") {
+report_m_ci <- function(tbl, par = "_r_", brackets = "round") { # automate reporting of intervals, e.g. confidence, credible, etc.
 
   open_bracket <- case_when(
     brackets == "round" ~ "(",
@@ -271,8 +273,9 @@ est_chases %>%
   flextable() %>% 
   bold(i = ~ str_count(CI, "-") %% 2 == 0, j = ~ CI + estimate + pMCMC, bold = TRUE) %>% 
   set_header_labels(CI = "95% credible interval") %>% 
-  add_footer_row(values = 'Note: Fixed estimates whose credible intervals do not span zero are shown in bold. pMCMC = posterior probability', colwidths = 5) %>% 
-  fit_to_width(max_width = 22)
+  add_footer_row(values = 'Note: Fixed estimates whose credible intervals do not span zero are shown in bold. pMCMC = posterior probability', colwidths = 5) %>%
+  width(j = 2, width = 2.5) %>% 
+  width(j = 4, width = 1.5)
 ```
 
 ```{r}
@@ -280,7 +283,8 @@ intake_interactions <- read.csv2(paste0(folder, "IntakeInteractions.csv"), dec =
 ```
 
 ## (c) Differences in nectar intake over time and between sexes and conditions
-Resource defence should lead to a larger between-individual difference in nectar consumption [@brown_evolution_1964]. Differences in nectar consumption were quantified as the standard deviation of nectar intake in each group, separately for males and females. During the clumped resource condition, the standard deviation increased significantly over time for males (Table \@ref(tab:intaketimeglmm), Fig. \@ref(fig:intaketime)) and was generally higher for males than for females (Table \@ref(tab:intaketimeglmm), Fig. \@ref(fig:intaketime)). For females in the clumped resource condition the effect of night was significantly smaller than in males (significant interaction between sex and night, Table \@ref(tab:intaketimeglmm)), and was not itself significant (`r report_m_ci(filter(intake_interactions, term == "females_night"), par = "estimate", brackets = "none")`). Compared to the clumped resource condition, in the distributed resource condition the effect of experimental night was significantly lower for males (interaction between condition and night, Table \@ref(tab:intaketimeglmm)), but not for females (`r report_m_ci(filter(intake_interactions, term == "females_night_contrast"), par = "estimate", brackets = "none")`). Moreover, in the distributed resource condition there was no significant change over the course of the experiment in males (`r report_m_ci(filter(intake_interactions, term == "night_phase2"), par = "estimate", brackets = "none")`) nor in females (`r report_m_ci(filter(intake_interactions, term == "females_night_phase2"), par = "estimate", brackets = "none")`).
+Resource defence should lead to a larger between-individual difference in nectar consumption [@brown_evolution_1964]. Differences in nectar consumption were quantified as the standard deviation of nectar intake in each group, separately for males and females. During the clumped resource condition, the standard deviation increased significantly over time for males (Table \@ref(tab:intaketimeglmm), Fig. \@ref(fig:intaketime)) and was generally higher for males than for females (Table \@ref(tab:intaketimeglmm), Fig. \@ref(fig:intaketime)). For females in the clumped resource condition the increase in standard deviation was significantly smaller than in males (significant interaction between sex and night, Table \@ref(tab:intaketimeglmm)), and was not itself significant (`r report_m_ci(filter(intake_interactions, term == "females_night"), par = "estimate", brackets = "none")`). Compared to the clumped resource condition, in the distributed resource condition the effect of experimental night was significantly lower for males (interaction between condition and night, Table \@ref(tab:intaketimeglmm)), but not for females (`r report_m_ci(filter(intake_interactions, term == "females_night_contrast"), par = "estimate", brackets = "none")`). Moreover, in the distributed resource condition there was no significant change over the course of the experiment in males (`r report_m_ci(filter(intake_interactions, term == "night_phase2"), par = "estimate", brackets = "none")`) nor in females (`r report_m_ci(filter(intake_interactions, term == "females_night_phase2"), par = "estimate", brackets = "none")`). Overall, for both males (significant effect of condition) and females (`r report_m_ci(filter(intake_interactions, term == "females_phase2"), par = "estimate", brackets = "none")`) the standard deviations were higher in the clumped than in the distributed resource conditions.
+\newpage
 
 ```{r intaketimeglmm, tab.cap="Summary of fixed effects from a generalized linear mixed-effects model of the standard deviation of nectar intake over time."}
 est_vol_time <- read.csv2(paste0(folder, "mcmcIntakeTime.csv"), dec = ".")
@@ -467,7 +471,7 @@ In this study, subordinate males received considerably less nectar than dominant
 
 ## (d) Conclusion
 
-Although flower defence behaviour of *G. soricina* was investigated in a laboratory setting, we observed similar behaviour as described in free-living populations. Our results revealed a sexual dimorphism in flower defence behaviour in mixed-sex groups. Only males successfully defended flower patches and excluded other males from their defended resource, whereas females remained unaffected by this male behaviour and continued to visit the flowers guarded by a male. This observed pattern is similar to resource defence behaviour observed in other nectar-feeding vertebrates. Furthermore, we could show that the frequency of aggressive interactions was, as predicted, higher when resources were clumped in one patch and transient. Future studies with free-living populations have to be conducted to assess how frequent and important resource defence in these nectar-feeding bats is and if males that are successful in defending resources have additional advantages. \newpage
+Although flower defence behaviour of *G. soricina* was investigated in a laboratory setting, we observed similar behaviour as described in free-living populations. Our results revealed a sexual dimorphism in flower defence behaviour in mixed-sex groups. Only males successfully defended flower patches and excluded other males from their defended resource, whereas females remained unaffected by this male behaviour and continued to visit the flowers guarded by a male. This observed pattern is similar to resource defence behaviour observed in other nectar-feeding vertebrates. Furthermore, we could show that the frequency of aggressive interactions was, as predicted, higher when resources were clumped in one patch and transient. Future studies with free-living populations have to be conducted to assess how frequent and important resource defence in these nectar-feeding bats is and if males that are successful in defending resources have additional fitness advantages. \newpage
 
 # Supplementary material {-} 
 
@@ -581,7 +585,7 @@ knitr::include_graphics("./images/wing.pdf")
 ```
 
 \newpage
-(ref:malesonly) Distribution of visits across flowers for the six bats in the males-only group. The coloured bars give the number of visits of each individual at the ten flowers during the clumped (top) and distributed (bottom) resource conditions for each experimental night (columns). The dominant males are shown with a blue border and the subordinate males are shown with a purple border. This was the only group with two males behaving as dominant. On the last night, rather than sharing all flowers within the defended patch, the dominant males partitioned the patch into two subpatches, with each bat defending its own partition.
+(ref:malesonly) Distribution of rewarded visits across flowers for the six bats in the males-only group. The coloured bars give the number of rewarded visits of each individual at the ten flowers during the clumped (top) and distributed (bottom) resource conditions for each experimental night (columns). The dominant males are shown with black stripes and the subordinate males are shown with white dots. This was the only group with two males behaving as dominant. On the last night, rather than sharing all flowers within the defended patch, the dominant males partitioned the patch into two subpatches, with each bat defending its own partition.
 
 ```{r, malesonly, fig.cap="(ref:malesonly)", fig.width=12}
 onlyrewarded <- read.csv2(paste0(folder, "RewardedVisits.csv"), dec = ".")
@@ -600,15 +604,17 @@ flower_distribution <- function(tib, groupname, phases) {
     count(loc, IdLabel, status, night, phase)
   
   plt <- tib %>% 
-    ggplot(aes(loc, n, fill = IdLabel, color = status)) +
-    geom_col() +
-    scale_fill_viridis_d(option = "turbo", guide = FALSE) +
-    scale_color_manual(values = 
-                         c("Females" = NA,
-                           "Dominant males" = "blue",
-                           "Subordinate males" = "purple"),
-                       guide = FALSE) +
+    ggplot(aes(loc, n, fill = IdLabel)) +
+    geom_col_pattern(aes(fill = IdLabel, pattern = status, pattern_fill = status),
+                     pattern_density = 0.3) +
+    scale_pattern_manual(values = c("Females" = "none",
+                                    "Dominant males" = "stripe",
+                                    "Subordinate males" = "circle"), guide = FALSE) +
+    scale_pattern_fill_manual(values = c("Females" = "none",
+                                         "Dominant males" = "black",
+                                         "Subordinate males" = "white"), guide = FALSE) +
     scale_x_continuous(breaks = 1:10) +
+    scale_fill_viridis_d(option = "turbo", guide = FALSE) +
     theme_serif() +
     theme(axis.text.x = element_text(size = 14, family = "serif")) +
     labs(x = "Flower", y = "Number of rewarded visits")
@@ -619,37 +625,37 @@ flower_distribution <- function(tib, groupname, phases) {
                             labeller = labeller(night = label_both,
                                                 phase = phase_label)))
   }
-    
+  
 }
 
 flower_distribution(onlyrewarded, "6m", phases = "both")
 ```
 
-(ref:femalesonly) Distribution of visits across flowers for the six bats in the females-only group. The coloured bars give the number of visits of each individual at the ten flowers during the clumped (top) and distributed (bottom) resource conditions for each experimental night (columns). Females in this group exhibited the highest frequency of chasing behaviour compared to all other females. This is also the only group, in which females nearly monopolized flower patches or flowers within a patch.
+(ref:femalesonly) Distribution of rewarded visits across flowers for the six bats in the females-only group. The coloured bars give the number of rewarded visits of each individual at the ten flowers during the clumped (top) and distributed (bottom) resource conditions for each experimental night (columns). Females in this group exhibited the highest frequency of chasing behaviour compared to all other females. This is also the only group, in which females nearly monopolized flower patches or flowers within a patch.
 
 ```{r, femalesonly, fig.cap="(ref:femalesonly)", fig.width=12}
 flower_distribution(onlyrewarded, "6f", phases = "both")
 ```
 
-(ref:mixed1) Distribution of visits across flowers for the six bats in mixed group 1. The coloured bars give the number of visits of each individual at the ten flowers during the clumped (top) and distributed (bottom) resource conditions for each experimental night (columns). The dominant male is shown with a blue border, the subordinate males are shown with a purple border, and the females are shown without a border. Due to a technical malfunction on night 4, there were no rewards delivered in the distributed resource condition and the data were excluded from analysis.
+(ref:mixed1) Distribution of rewarded visits across flowers for the six bats in mixed group 1. The coloured bars give the number of rewarded visits of each individual at the ten flowers during the clumped (top) and distributed (bottom) resource conditions for each experimental night (columns). The dominant male is shown with black stripes, the subordinate males are shown with white dots, and the females are shown with solid bars. Due to a technical malfunction on night 4, there were no rewards delivered in the distributed resource condition and the data were excluded from analysis.
 
 ```{r, mixed1, fig.cap="(ref:mixed1)", fig.width=12}
 flower_distribution(onlyrewarded, "mixed1", phases = "both")
 ```
 
-(ref:mixed2) Distribution of visits across flowers for the six bats in mixed group 2. Same notation as in Fig. \@ref(fig:mixed1), but the colours correspond to different individuals.
+(ref:mixed2) Distribution of rewarded visits across flowers for the six bats in mixed group 2. Same notation as in Fig. \@ref(fig:mixed1), but the colours correspond to different individuals.
 
 ```{r, mixed2, fig.cap="(ref:mixed2)", fig.width=12}
 flower_distribution(onlyrewarded, "mixed2", phases = "both")
 ```
 
-(ref:mixed3) Distribution of visits across flowers for the six bats in mixed group 3. Same notation as in Fig. \@ref(fig:mixed1), but the colours correspond to different individuals. Due to a technical malfunction on night 9, there were no rewards delivered in the distributed resource condition and the data were excluded from analysis.
+(ref:mixed3) Distribution of rewarded visits across flowers for the six bats in mixed group 3. Same notation as in Fig. \@ref(fig:mixed1), but the colours correspond to different individuals. Due to a technical malfunction on night 9, there were no rewards delivered in the distributed resource condition and the data were excluded from analysis.
 
 ```{r, mixed3, fig.cap="(ref:mixed3)", fig.width=12}
 flower_distribution(onlyrewarded, "mixed3", phases = "both")
 ```
 
-(ref:mixed4) Distribution of visits across flowers for the six bats in mixed group 4. Same notation as in Fig. \@ref(fig:mixed1), but the colours correspond to different individuals.
+(ref:mixed4) Distribution of rewarded visits across flowers for the six bats in mixed group 4. Same notation as in Fig. \@ref(fig:mixed1), but the colours correspond to different individuals.
 
 ```{r, mixed4, fig.cap="(ref:mixed4)", fig.width=12}
 flower_distribution(onlyrewarded, "mixed4", phases = "both")
