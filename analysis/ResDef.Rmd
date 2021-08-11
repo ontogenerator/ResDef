@@ -3,8 +3,10 @@ title: "Sex-dependent resource defense in a nectar-feeding bat"
 header-includes:
    - \usepackage{lineno}
    - \linenumbers
+   - \usepackage[backend=biber,sortlocale=de]{biblatex}
    - \usepackage{float} \floatplacement{figure}{H}
    - \newcommand{\beginsupplement}{\setcounter{table}{0}  \renewcommand{\thetable}{S\arabic{table}} \setcounter{figure}{0} \renewcommand{\thefigure}{S\arabic{figure}}}
+
 always_allow_html: yes
 output:
   # bookdown::word_document2:
@@ -15,7 +17,7 @@ output:
     toc: no
 
 bibliography: ResDef.bib
-# csl: proceedings-of-the-royal-society-b.csl
+csl: behavioral-ecology.csl
 ---
 
 Sabine Wintergerst^1,2^, Vladislav Nachev^1\*\S^, York Winter^1\*\S^
@@ -24,7 +26,7 @@ Sabine Wintergerst^1,2^, Vladislav Nachev^1\*\S^, York Winter^1\*\S^
 
 ^2^ Fairchild Tropical Botanic Garden, 10901 Old Cutler Rd, Miami, FL 33156, USA
 
-^**\***^**For correspondence:** vladislav.nachev\@charite.de, york.winter\@charite.de
+^**\***^**For correspondence:** vladislav.nachev\@hu-berlin.de, york.winter\@charite.de
 
 **Present Address:** ^\S^Institut für Biologie, Humboldt-Universität zu Berlin, 10099 Berlin, Germany
 
@@ -39,15 +41,11 @@ knitr::opts_chunk$set(
 
 # Abstract {-}
 
-Aggressive resource defense is frequently observed throughout the animal kingdom and although it is a widespread phenomenon in nectar-feeding birds, reports of interference competition in nectarivorous bats are extremely rare. *Glossophaga soricina* has been observed to defend flowers of *Agave desmettiana* but not much is known about the social structure during resource defense and how interference competition leads to resource monopolization and affects nectar intake. Here, we investigated the resource defense behavior of *G. soricina* in a laboratory setting. By using an experimental set-up consisting of two patches of computer-controlled artificial flowers we tracked the nectar intake of every group member. Furthermore, we established an automated method for flagging potentially aggressive interactions at proximity to the artificial flowers. Theoretical models of interference competition predict that aggressive interactions increase when resources are spatially more clumped. We varied resource distribution across two patches from clumped to distributed to assess how resource density influences aggressive interactions. Resource defense behavior was assessed in 36 individuals divided into one male and one female group, as well as four mixed-sex groups. Males engaged in potentially aggressive interactions significantly more often than females and in each group some individuals were successful in defending artificial flowers. Subordinate males experienced a substantial decrease in nectar intake. However, females were only marginally affected by male aggression and maintained nectar intake. These results suggest that aggressive interactions and their effect on nectar intake are sex-dependent in *G. soricina*. Furthermore, as expected, aggressive interactions were more frequent and resource defense was only successful when resources were clumped. Our novel experimental set-up allowed us to perform a mostly automated experimental test of models of interference competition and resource defense with a mammal under the controlled conditions of the laboratory. This new approach may pave the way for further such studies with other animals.
+Aggressive defense can secure from the transient monopolization of a resource up to the long-term maintenance of a territory. While such interference competition is common in nectar-feeding birds, reports in nectar-feeding bats are rare. *Glossophaga* bats have been observed to temporarily defend flowers but the extent of this monopolization, its effects on nectar intake, and underlying sexual differences remain unknown. We investigated the resource defense behavior of 36 *Glossophaga mutica* in the laboratory. We presented bats with two patches of computer-controlled artificial flowers and tracked individual nectar intake. Furthermore, we established an automated method for detecting potentially aggressive interactions near the artificial flowers. Theoretical models of interference competition predict more aggressive interactions when resources are spatially more clumped. To test this, we varied resource distribution across two patches from clumped to distributed and monitored bats’ interactions in one male, one female, and four mixed-sex groups. Males engaged in potentially aggressive interactions more often than females and in each group some individuals defended artificial flowers against others. Subordinate males experienced a substantial decrease in nectar intake, while females were marginally affected by male aggression. These results suggest that aggressive interactions and their effect on nectar intake are sex-dependent in *G. mutica*. Furthermore, aggressive interactions were more frequent and resource defense was only successful when resources were clumped. Our experimental set-up allowed us to perform an automated test of models of interference competition with a mammal under controlled laboratory conditions. This approach may pave the way for similar studies with other animals.
 
+# Lay summary {-}
 
-Reduce to 250 and write a lay summary
-
-
-shortened: (still need 28 words less)
-
-Aggressive resource defense can lead from the transient monopolization of a resource up to the long-term defense of a territory. While such interference competition is common in nectar-feeding birds, reports in nectar-feeding bats are rare. Glossophaga bats have been observed to temporarily defend flowers but the extent of this resource monopolization, its effects on individual nectar intake and underlying sexual differences remain unknown. We investigated the resource defense behavior of 36 G. mutica in a laboratory setting. We presented bats with two patches of computer-controlled artificial flowers, and tracked individual nectar intake. Furthermore, we established an automated method for detecting potentially aggressive interactions near the artificial flowers. Theoretical models of interference competition predict more aggressive interactions when resources are spatially more clumped. To test this, we varied resource distribution across two patches from clumped to distributed and monitored bats’ aggressive interactions in one male and one female group, as well as four mixed-sex groups. Males engaged in potentially aggressive interactions significantly more often than females and in each group some individuals were successful in defending artificial flowers. Subordinate males experienced a substantial decrease in nectar intake. However, females were marginally affected by male aggression and maintained nectar intake. These results suggest that aggressive interactions and their effect on nectar intake are sex-dependent in G. mutica. Furthermore, as expected, aggressive interactions were more frequent and resource defense was only successful when resources were clumped. Our novel experimental set-up allowed us to perform a mostly automated experimental test of models of interference competition and resource defense with a mammal under the controlled conditions of the laboratory. This new approach may pave the way for further such studies with other animals.
+Males bully other males to get more food, but only when food is easy to defend. When flowers are spread out nectar-feeding bats rarely engage in fights. However, when there are rich flowers in one spot and no flowers elsewhere, some males start attacking others, denying them access to the nectar. Females do not seem bothered by such male bullies, but when there are no males around, some females become bullies themselves.
 
 # Keywords: {-}
 
@@ -88,6 +86,16 @@ theme_serif <- function() { # consistent serif look for all plots
         strip.text = element_text(size = 16, family = "serif"))
 }
 
+# theme_arial <- function() { # consistent sans serif look for all plots
+#   theme_pubr() +
+#     theme(axis.text = element_text(size = 20),
+#         axis.line = element_line(color = "black", size = 1),
+#         axis.title = element_text(size = 20),
+#         legend.text = element_text(size = 20),
+#         plot.title = element_text(size = 20, hjust = 0.5),
+#         legend.title = element_text(size = 20, face = "bold", hjust = 0.5),
+#         strip.text = element_text(size = 16))
+# }
 
 report_m_ci <- function(tbl, par = "_r_", brackets = "round") { # automate reporting of intervals, e.g. confidence, credible, etc.
 
@@ -672,9 +680,6 @@ flower_distribution(onlyrewarded, "mixed3", phases = "both")
 flower_distribution(onlyrewarded, "mixed4", phases = "both")
 ```
 
-# Data accessibility
-
-All data and code are available in the Zenodo repository: xxx.
 
 # Authors' contributions
 
@@ -692,5 +697,9 @@ S.W. was supported by an Elsa-Neumann-Stipendium des Landes Berlin.
 # Acknowledgements
 
 We thank Katja Frei and Peggy Hoffmann for assistance with the main experiments and animal keeping, Alexej Schatz for programming of the control software, and Peter Spende, Francesco Bagorda, and Waldemar Krzok for help with the experimental hardware. We also thank Marion Rivalan and Lucille Alonso for a fruitful discussion on the analysis of social behavior.
+
+# Data Availability
+
+All data and code are available in the Zenodo repository: xxx.
 
 # References

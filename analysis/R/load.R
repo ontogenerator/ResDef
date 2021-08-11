@@ -121,7 +121,7 @@ conditions_table <- conditions %>%
   mutate(discard = as.character(discard))
 
 add_conditions_discard_data <- function(tbl, conditions_table) {
-  #discard data labelled for discarding in conditions table
+  #discard data labeled for discarding in conditions table
   date_filters <- any(!conditions_table$discard %in% c(1, 0))
   
   tbl_w_conds <- tbl %>%
