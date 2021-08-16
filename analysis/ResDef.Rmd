@@ -22,13 +22,13 @@ bibliography: ResDef.bib
 
 Sabine Wintergerst^1,2^, York Winter^1\*\S^, Vladislav Nachev^1\*\S^
 
-^1^ Institut für Biologie, Humboldt-Universität zu Berlin, Germany
+^1^ Institut für Biologie, Humboldt Universität, Germany
 
 ^2^ Fairchild Tropical Botanic Garden, 10901 Old Cutler Rd, Miami, FL 33156, USA
 
 ^**\***^**For correspondence:** vladislav.nachev\@hu-berlin.de, york.winter\@charite.de
 
-**Present Address:** ^\S^Institut für Biologie, Humboldt-Universität zu Berlin, 10099 Berlin, Germany
+**Present Address:** ^\S^Institut für Biologie, Humboldt Universität, 10099 Berlin, Germany
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
