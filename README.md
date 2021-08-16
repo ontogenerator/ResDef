@@ -160,4 +160,4 @@ This file is user-generated and allows mapping the raw csv files to the respecti
 |comments	   |Clarifying informaiton, e.g. When nights are omitted|
 
 
-For further information contact: vladislav.nachev@gmail.com
+For further information contact: vladislav.nachev@protonmail.com
