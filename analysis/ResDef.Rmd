@@ -17,7 +17,7 @@ output:
     toc: no
 
 bibliography: ResDef.bib
-csl: behavioral-ecology.csl
+# csl: behavioral-ecology.csl
 ---
 
 Sabine Wintergerst^1,2^, York Winter^1\*\S^, Vladislav Nachev^1\*\S^
@@ -38,6 +38,8 @@ knitr::opts_chunk$set(
 	warning = FALSE
 	)
 ```
+
+\newpage
 
 # Abstract {-}
 
@@ -179,7 +181,7 @@ We took the frequency of individuals chasing each other at the artificial flower
 
 To investigate the difference in chasing behavior between males and females and between the resource conditions (one versus two rewarding patches) a Bayesian generalized linear mixed model [`MCMCglmm`, @hadfield_mcmc_2010] with a binomial error structure was used. Body weight as an approximation of size and the full interaction between resource condition and sex were included as fixed effects and the influence of these fixed effects on the proportion of chasing events was assessed. Experimental group and individual were included as random effects. The same model structure was used to address the question if the proportion of being chased was influenced by these independent variables. If one or more individuals start to defend flowers and thus exclude others from drinking, nectar consumption should increasingly differ between individuals since the successful chaser should gain a higher nectar intake thus reducing the intake of the chased individuals. Therefore, the between-individual difference in nectar consumption over the course of the experiment was compared between experimental groups and resource conditions (clumped vs. distributed). First, each individual's total nectar consumption standardized by the number of hours of foraging during the clumped (one rewarding patch) and distributed (two rewarding patches) resource condition was determined for each experimental night. Then these data were used to calculate group standard deviations, separately for the males and females of each group. In order to assess the influence of resource defense on the individual differences in nectar consumption (standard deviation of nectar intake) we fit a `MCMCglmm` model with a Gaussian error structure and the following fixed effects: sex, experimental night (centered), and resource condition (clumped or distributed), as well as all two-way interactions. Again, we included group and individual as random effects.\
 By plotting individual nectar consumption during the last two nights of the experiment against the frequency of chasing other individuals, two non-overlapping groups of males were obtained, which were labeled dominant and subordinate males, respectively. Such a clear pattern was not observed in females. The identification of dominant individuals was also supported by calculating the individual Glicko ratings [@glickman_parameter_1999; @so_social_2015] from all chasing events over the last two experimental nights in each group. In the Glicko Rating algorithm individuals gain or lose ranking points based on their wins or losses and the rating of their opponent [@glickman_parameter_1999; @so_social_2015]. Glicko ratings were analyzed using the `PlayerRatings` package in R [@stephenson_playerratings_2020]. Based on nectar consumption, the frequency of chasing events and the individual Glicko group ranks (from 1 to 6, with 1 corresponding to the highest Glicko rating), each group contained individuals belonging to one of three different types of social status: female, dominant male, and subordinate male. To address the question whether nectar consumption varied depending on social status during the early and late stages of the experiment we used Welch's tests and adjusted the p values using the Holms method for multiple comparisons.\
-All statistical analyses were conducted using R [@r_core_team_r:_2021]. All data and code are available in the Zenodo repository: https://doi.org/10.5281/zenodo.5205511.
+All statistical analyses were conducted using R [@r_core_team_r:_2021].
 
 # 3. Results
 
@@ -450,7 +452,7 @@ ggboxplot(cons_contrasts, x = "phase", y = "vol_hr",
   theme_serif()
 ```
 
-## (e) behavioral observations
+## (e) Behavioral observations
 
 Qualitative behavioral observations of four hours of video recordings revealed several behaviors that seem to be characteristic for dominant males. Instead of just visiting the flowers and leaving the patch as the other individuals did, dominant males remained hanging between the flowers within the patch for a significant amount of time (Fig. \@ref(fig:video)). When other individuals came close due to visits of directly adjacent flowers, dominant males often spread one wing in the direction of the other individual which could be interpreted as a threatening posture. Some individuals were attacked and chased away by dominant males while visiting artificial flowers. In this case, dominant males mostly attacked from above with their mouth wide open, and followed the intruder for a short distance. Sometimes the chasing escalated into fighting with both bats tumbling towards the ground and resuming their flight only shortly above the floor. In rare cases, these fights might have led to small injuries. One subordinate male had several fresh scratches on its wing that were not present before the experiment and that were possibly caused by bites (Fig. \@ref(fig:wing)). After a successful flower defense, the dominant male normally visited most of the five flowers within the patch before returning to its hanging position between the flowers.
 
@@ -680,6 +682,7 @@ flower_distribution(onlyrewarded, "mixed3", phases = "both")
 flower_distribution(onlyrewarded, "mixed4", phases = "both")
 ```
 
+\newpage
 
 # Authors' contributions
 
@@ -701,5 +704,7 @@ We thank Katja Frei and Peggy Hoffmann for assistance with the main experiments 
 # Data Availability
 
 All data and code are available in the Zenodo repository:  https://doi.org/10.5281/zenodo.5205511.
+
+\newpage
 
 # References
