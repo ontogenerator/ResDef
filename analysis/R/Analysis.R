@@ -92,7 +92,8 @@ chased_n <- allnights_n %>%
   filter(!is.na(chased)) %>% 
   count(cond, group_night, chased, group, phase) %>%
   rename(IdLabel = chased,
-         n_chased = n) 
+         n_chased = n)  %>% 
+  mutate(phase = factor(phase))
 
 bat_info <- read.csv2(file = paste0(folder, "metadata/conditions.csv"),
                                           header = TRUE, sep = ";", dec = ".", na.strings = "NA") %>%
@@ -108,7 +109,7 @@ only_chases <- allnights_n %>%
   filter(chase == TRUE) %>% 
   select(cond, group_night, group, IdLabel, chased) %>% 
   mutate(outcome = 1) %>% 
-  left_join(rev_count) 
+  left_join(rev_count)
 
 gl <- only_chases %>% 
   filter(rev_night < 3, cond == "test") %>% 
@@ -327,12 +328,12 @@ cons_clumped <- cons_group1 %>%
   labs(x = "Night", title = "Clumped condition - one patch",
        y = "Nectar intake [mL]") +
   ylim(c(0, 18)) +
-  scale_shape_manual(values = c(21, 22, 24, 21, 22, 24), guide = FALSE) +
+  scale_shape_manual(values = c(21, 22, 24, 21, 22, 24), guide = "none") +
   scale_color_manual(values = c(rgb(red = 46, green = 117, blue = 182, max = 255),
                                 rgb(red = 184, green = 13, blue = 72, max = 255)),
                      name = "", labels = c("Male", "Female")) +
   scale_fill_manual(name = "", values = c(rgb(red = 46, green = 117, blue = 182, max = 255),
-                                          rgb(red = 184, green = 13, blue = 72, max = 255)), guide = FALSE) +
+                                          rgb(red = 184, green = 13, blue = 72, max = 255)), guide = "none") +
   scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7), limits = c(0.8, 7)) +
   geom_line(aes(color = sex)) +
   geom_point(aes(color = sex, fill = sex), size = 3) +
@@ -344,11 +345,11 @@ cons_distr <- cons_group1 %>%
   ggplot(aes(x = group_night, y = vol_consumed)) +
   labs(x = "Night", title = "Distributed condition - two patches",
        y = "") +
-  scale_shape_manual(values = c(21, 22, 24, 21, 22, 24), guide = FALSE) +
+  scale_shape_manual(values = c(21, 22, 24, 21, 22, 24), guide = "none") +
   scale_color_manual(values = c(rgb(red = 46, green = 117, blue = 182, max = 255),
-                                rgb(red = 184, green = 13, blue = 72, max = 255)), guide = FALSE) +
+                                rgb(red = 184, green = 13, blue = 72, max = 255)), guide = "none") +
   scale_fill_manual(name = "", values = c(rgb(red = 46, green = 117, blue = 182, max = 255),
-                                          rgb(red = 184, green = 13, blue = 72, max = 255)), guide = FALSE) +
+                                          rgb(red = 184, green = 13, blue = 72, max = 255)), guide = "none") +
   scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7), limits = c(0.8, 7)) +
   geom_line(aes(group = Individual, color = sex)) +
   geom_point(aes(shape = Individual, color = sex, fill = sex), size = 3) +
@@ -373,7 +374,7 @@ fig_chases <- chase_summ %>%
   scale_color_manual(values = c(rgb(red = 46, green = 117, blue = 182, max = 255),
                                 rgb(red = 184, green = 13, blue = 72, max = 255)),
                      name = "", labels = c("Male", "Female")) +
-  # scale_fill_manual("", values = c("grey24", "white"), guide = FALSE) +
+  # scale_fill_manual("", values = c("grey24", "white"), guide = "none") +
   scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2", "Mixed \n Group3",
                               "Mixed \n Group4", "Male \n Group", "Female \n Group")) +
   scale_y_continuous(limits = c(0, 0.016), labels = c(0, "", 0.01, "")) +
@@ -393,7 +394,7 @@ fig_chased <- chase_summ %>%
   theme_serif() +
   scale_color_manual(values = c(rgb(red = 46, green = 117, blue = 182, max = 255),
                                 rgb(red = 184, green = 13, blue = 72, max = 255)),
-                     guide = FALSE) +
+                     guide = "none") +
   scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2", "Mixed \n Group3",
                               "Mixed \n Group4", "Male \n Group", "Female \n Group")) +
   scale_y_continuous(limits = c(0, 0.016), labels = c(0, "", 0.01, "")) +
@@ -537,7 +538,7 @@ allnights_n %>%
   count(group) %>% 
   ggplot(aes(group, n, fill = group)) +
   geom_col() +
-  scale_fill_viridis_d(option = "turbo", direction = -1, guide = FALSE) +
+  scale_fill_viridis_d(option = "turbo", direction = -1, guide = "none") +
   scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2", "Mixed \n Group3",
                               "Mixed \n Group4", "Male \n Group", "Female \n Group")) +
   labs(x = "", y = "Total chases in training") +
@@ -552,23 +553,6 @@ lastnight_f <- read.csv2(file = paste0(folder, "raw/group6f/", "Day10_AllActive_
          DateTime = as.POSIXct(DateTime * (60 * 60 * 24),
                                origin = "1899-12-30", tz = "UTC"))
 
-sex_info <- bat_info %>% 
-  select(-weight) %>% 
-  rename(chased = IdLabel,
-         sex_chased = sex)
-
-only_chases %>% 
-  left_join(bat_info) %>% 
-  left_join(sex_info) %>% 
-  filter(!str_detect(group, "6")) %>% 
-  group_by(IdLabel, sex, group) %>% 
-  summarise(prop_chased_males = mean(sex_chased == "m"),
-            prop_chased_females = mean(sex_chased == "f")) %>% 
-  ggplot(aes(group, prop_chased_males, color = sex)) +
-  geom_jitter(width = 0.2) +
-  geom_hline(yintercept = 0.5, linetype = "dashed") +
-  theme_serif() +
-  scale_color_viridis_d(direction = -1)
 
 
 only_chases %>% 
@@ -599,8 +583,6 @@ allnights_n %>%
   facet_wrap(~group) +
   theme_serif() +
   scale_color_viridis_d(direction = -1)
-
-
 
 #being chased vs nectar intake
 
@@ -634,8 +616,6 @@ chased_males <- chase_nectar %>%
   theme_serif() +
   theme(legend.text = element_text(size = 18, family = "serif"))
 
-
-
 chased_females <- chase_nectar %>%
   filter(sex == "f") %>% 
   ggplot(aes(prop_chased, vol_hr, shape = group)) +
@@ -657,7 +637,6 @@ chased_females <- chase_nectar %>%
 ggarrange(chased_males, chased_females, labels = c("A", "B"),
           font.label = list(size = 18, family = "serif"),
           common.legend = TRUE, legend = "right")
-
 
 chased_males <- chase_nectar %>%
   filter(sex == "m") %>% 
@@ -802,12 +781,11 @@ ggboxplot(cons_contrasts, x = "partition", y = "vol_hr",
 mean_intake_all <- vis_summaries %>% 
   filter(cond == "test", phase == 1) %>% 
   group_by(group_night, IdLabel) %>% 
-  summarise(vol_hr = sum(vol_consumed)/sum(phase_dur)) %>% 
+  summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur))) %>% 
   group_by(IdLabel) %>% 
   summarise(mean_vol_hr = mean(vol_hr)) %>% 
   summarise(mean_intake = round(mean(mean_vol_hr), 2),
             sd = round(sd(mean_vol_hr), 2))
-
 
 ### overall Glicko (not only last two nights)
 
@@ -879,3 +857,79 @@ onlychoices <- allnights_n %>%
 flower_distribution(onlychoices, "6m", phases = "both")
 
 # not much gained by these alternative visualizations
+
+### Additional figures suggested by next round of reviews
+
+cons_all <- vis_summaries %>%
+  filter(cond == "test") %>%
+  group_by(group, group_night, IdLabel, sex, phase) %>%
+  summarise(vol_consumed = sum(vol_consumed)) 
+
+phase_label <- c(`1` = "clumped", `2` = "distributed") 
+group_label <- c("mixed1" = "Mixed 1", "mixed2" = "Mixed 2",
+                 "mixed3" = "Mixed 3", "mixed4" = "Mixed 4",
+                 "6m" = "Males-only", "6f" = "Females-only")
+
+shapes <- cons_all %>% 
+  ungroup() %>% 
+  distinct(sex, IdLabel, group) %>% 
+  left_join(statuses) %>% 
+  arrange(group, sex, status, IdLabel) %>%
+  mutate(shape = rep(c(21:25, 21), 6),
+         size = ifelse(str_detect(status, "Dom") | IdLabel == "Ind31", 1, 2))
+
+cons_all %>%
+  left_join(shapes) %>% 
+  # mutate(Individual = factor(IdLabel, levels = ordered_ids)) %>% 
+  ggplot(aes(x = group_night, y = vol_consumed, shape = shape, group = IdLabel)) +
+  geom_line() +
+  geom_point(aes(fill = sex, size = size)) +
+  labs(x = "Night",
+       y = "Nectar intake [mL]") +
+  facet_grid(group ~ phase, labeller = labeller(phase = phase_label,
+                                                group = group_label)) +
+  # scale_shape_manual(values = rep(c(21:25, 21), 6), guide = "none") +
+  scale_shape_identity() +
+  scale_size_identity() +
+  scale_fill_manual(name = "", values = c("black", "white"), labels = c("Male", "Female")) +
+  # scale_size_manual(values = rep(c(2, 2, 2, 2, 2, 1), 6), guide = "none") +
+  scale_x_continuous(breaks = c(1:9), limits = c(0.8, 9)) +
+  scale_y_continuous(breaks = c(0, 10, 20), limits = c(0, 24)) +
+  theme_serif() +
+  theme(legend.position = "right", 
+        legend.title = element_blank(),
+        # legend.text = element_text(size = 12, family = "serif", hjust = 0.5),
+        strip.text = element_text(size = 13, family = "serif")) +
+  guides(fill = guide_legend(override.aes = list(shape = 21,
+                                                 size = 3))) 
+
+
+
+sex_info <- bat_info %>% 
+  select(-weight) %>% 
+  rename(chased = IdLabel,
+         sex_chased = sex) 
+
+# Did Ind12 never chase/get chased? implausible. Double-check!
+
+sex_chases <-
+only_chases %>% 
+  filter(!str_detect(group, "6")) %>% 
+  left_join(bat_info) %>% 
+  left_join(sex_info) %>%
+  group_by(IdLabel, sex, group) %>% 
+  summarise(prop_chased_males = mean(sex_chased == "m"),
+            prop_chased_females = mean(sex_chased == "f")) %>%
+  left_join(statuses) %>%
+  mutate(shape = ifelse(str_detect(status, "Dom"), 18, 19))
+
+sex_chases %>% 
+  ggplot(aes(group, prop_chased_males, color = sex, shape = shape)) +
+  scale_shape_identity() +
+  geom_jitter(width = 0.2, size = 3) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  theme_serif() +
+  scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2", "Mixed \n Group3",
+                              "Mixed \n Group4")) +
+  scale_color_viridis_d(direction = -1, name = "", labels = c("Female", "Male")) +
+  labs(x = "", y = "Proportion of chases directed to male bats")

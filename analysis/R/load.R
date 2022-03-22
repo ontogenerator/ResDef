@@ -122,16 +122,16 @@ conditions_table <- conditions %>%
 
 add_conditions_discard_data <- function(tbl, conditions_table) {
   #discard data labeled for discarding in conditions table
-  date_filters <- any(!conditions_table$discard %in% c(1, 0))
+  date_filters <- any(!conditions_table$discard %in% c("1", "0"))
   
   tbl_w_conds <- tbl %>%
     left_join(conditions_table, by = c("night", "IdLabel")) %>%
     select(night, IdLabel, loc, everything()) %>% 
-    mutate(discard = replace_na(discard, 0))
+    mutate(discard = replace_na(discard, "0"))
   
   if (!date_filters) {
     tbl_filtered <- tbl_w_conds %>% 
-             filter(discard == 0) %>%
+             filter(discard == "0") %>%
              select(-discard)
   } else {
     tbl_filtered <- tbl_w_conds %>% 
@@ -164,7 +164,6 @@ tbl_filtered
 
 allnights <- allnights %>%
   add_conditions_discard_data(conditions_table) %>% 
-  # left_join(flower_table, by = c("night", "IdLabel", "loc")) %>% 
   # sort chronologically again
   arrange(DateTime) %>% 
   mutate(loc = factor(loc),

@@ -72,7 +72,7 @@ library(tidyverse)
 library(flextable)
 library(rstatix)
 library(ggbeeswarm)
-library(ggpattern)
+# library(ggpattern)
 
 folder <- "data/"
 
@@ -215,7 +215,7 @@ cons_clumped <- cons_group1 %>%
   labs(x = "Night", title = "Clumped condition - one patch",
        y = "Nectar intake [mL]") +
   ylim(c(0, 18)) +
-  scale_shape_manual(values = c(21, 22, 24, 21, 22, 24), guide = FALSE) +
+  scale_shape_manual(values = c(21, 22, 24, 21, 22, 24), guide = "none") +
   scale_fill_manual(name = "", values = c("black", "white"), labels = c("Male", "Female")) +
   scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7), limits = c(0.8, 7)) +
   theme_serif() +
@@ -229,8 +229,8 @@ cons_distr <- cons_group1 %>%
   geom_point(aes(shape = Individual, fill = sex), size = 3) +
   labs(x = "Night", title = "Distributed condition - two patches",
        y = "") +
-  scale_shape_manual(values = c(21, 22, 24, 21, 22, 24), guide = FALSE) +
-  scale_fill_manual(name = "", values = c("black", "white"), guide = FALSE) +
+  scale_shape_manual(values = c(21, 22, 24, 21, 22, 24), guide = "none") +
+  scale_fill_manual(name = "", values = c("black", "white"), guide = "none") +
   scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7), limits = c(0.8, 7)) +
   ylim(c(0, 18)) +
   theme_serif()
@@ -270,7 +270,7 @@ fig_chased <- chase_summ %>%
               alpha = 0.7, cex = 2, size = 4) +
     labs(title = "Being chased", x = "", y = "Proportion chased") +
   theme_serif() +
-  scale_color_viridis_d(guide = FALSE) +
+  scale_color_viridis_d(guide = "none") +
   scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2", "Mixed \n Group3",
                               "Mixed \n Group4", "Male \n Group", "Female \n Group")) +
   scale_y_continuous(limits = c(0, 0.016), labels = c(0, "", 0.01, "")) +
@@ -630,12 +630,12 @@ flower_distribution <- function(tib, groupname, phases) {
                      pattern_density = 0.3) +
     scale_pattern_manual(values = c("Females" = "none",
                                     "Dominant males" = "stripe",
-                                    "Subordinate males" = "circle"), guide = FALSE) +
+                                    "Subordinate males" = "circle"), guide = "none") +
     scale_pattern_fill_manual(values = c("Females" = "none",
                                          "Dominant males" = "black",
-                                         "Subordinate males" = "white"), guide = FALSE) +
+                                         "Subordinate males" = "white"), guide = "none") +
     scale_x_continuous(breaks = 1:10) +
-    scale_fill_viridis_d(option = "turbo", guide = FALSE) +
+    scale_fill_viridis_d(option = "turbo", guide = "none") +
     theme_serif() +
     theme(axis.text.x = element_text(size = 14, family = "serif")) +
     labs(x = "Flower", y = "Number of rewarded visits")
