@@ -117,8 +117,9 @@ allnights <- allnights %>%
 # nights to discard, etc.
 conditions_table <- conditions %>% 
   select(-IdRFID) %>% 
-  distinct() %>% 
-  mutate(discard = as.character(discard))
+  distinct() 
+# %>% 
+#   mutate(discard = as.character(discard))
 
 add_conditions_discard_data <- function(tbl, conditions_table) {
   #discard data labeled for discarding in conditions table
@@ -154,7 +155,7 @@ add_conditions_discard_data <- function(tbl, conditions_table) {
              ),
              discard_times = ifelse(DateTime %within% interval(time_after, time_before), 1, 0),
              discard_times = replace_na(discard_times, 0),
-             discard = discard_times == 1 | discard == 1)  %>% 
+             discard = discard_times == 1 | discard == "1")  %>% 
       filter(!discard) %>%
       ungroup() %>% 
       select(-time_before, -time_after, -start_date, -discard_times, -discard)

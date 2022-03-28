@@ -72,7 +72,7 @@ library(tidyverse)
 library(flextable)
 library(rstatix)
 library(ggbeeswarm)
-# library(ggpattern)
+library(ggpattern)
 
 folder <- "data/"
 

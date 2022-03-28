@@ -92,8 +92,7 @@ chased_n <- allnights_n %>%
   filter(!is.na(chased)) %>% 
   count(cond, group_night, chased, group, phase) %>%
   rename(IdLabel = chased,
-         n_chased = n)  %>% 
-  mutate(phase = factor(phase))
+         n_chased = n)
 
 bat_info <- read.csv2(file = paste0(folder, "metadata/conditions.csv"),
                                           header = TRUE, sep = ";", dec = ".", na.strings = "NA") %>%
@@ -826,7 +825,7 @@ chase_summ %>%
   facet_wrap(~group) +
   geom_abline()
 
-# show dom female on boxplot, why not same as other plot?
+# show dom female on boxplot
 
 dom_female <- chase_nectar %>% 
   ungroup() %>% 
@@ -870,16 +869,17 @@ group_label <- c("mixed1" = "Mixed 1", "mixed2" = "Mixed 2",
                  "mixed3" = "Mixed 3", "mixed4" = "Mixed 4",
                  "6m" = "Males-only", "6f" = "Females-only")
 
-shapes <- cons_all %>% 
+aests <- cons_all %>% 
   ungroup() %>% 
   distinct(sex, IdLabel, group) %>% 
   left_join(statuses) %>% 
   arrange(group, sex, status, IdLabel) %>%
   mutate(shape = rep(c(21:25, 21), 6),
-         size = ifelse(str_detect(status, "Dom") | IdLabel == "Ind31", 1, 2))
+         size = ifelse(str_detect(status, "Dom") | IdLabel == "Ind31", 1, 2),
+         fill_group = factor(rep(1:6, 6)))
 
 cons_all %>%
-  left_join(shapes) %>% 
+  left_join(aests) %>% 
   # mutate(Individual = factor(IdLabel, levels = ordered_ids)) %>% 
   ggplot(aes(x = group_night, y = vol_consumed, shape = shape, group = IdLabel)) +
   geom_line() +
@@ -903,33 +903,111 @@ cons_all %>%
   guides(fill = guide_legend(override.aes = list(shape = 21,
                                                  size = 3))) 
 
-
-
 sex_info <- bat_info %>% 
   select(-weight) %>% 
   rename(chased = IdLabel,
          sex_chased = sex) 
 
-# Did Ind12 never chase/get chased? implausible. Double-check!
 
-sex_chases <-
-only_chases %>% 
-  filter(!str_detect(group, "6")) %>% 
+sex_chases <- only_chases %>% 
+  filter(cond == "test") %>% 
   left_join(bat_info) %>% 
   left_join(sex_info) %>%
   group_by(IdLabel, sex, group) %>% 
   summarise(prop_chased_males = mean(sex_chased == "m"),
-            prop_chased_females = mean(sex_chased == "f")) %>%
+            prop_chased_females = mean(sex_chased == "f"),
+            freq_chased_males = sum(sex_chased == "m")/max(group_night),
+            freq_chased_females = sum(sex_chased == "f")/max(group_night)) %>%
   left_join(statuses) %>%
   mutate(shape = ifelse(str_detect(status, "Dom"), 18, 19))
 
-sex_chases %>% 
-  ggplot(aes(group, prop_chased_males, color = sex, shape = shape)) +
-  scale_shape_identity() +
-  geom_jitter(width = 0.2, size = 3) +
-  geom_hline(yintercept = 0.5, linetype = "dashed") +
+m_chase <- sex_chases %>% 
+  left_join(aests %>%  select(IdLabel, fill_group)) %>% 
+  ggplot(aes(group, freq_chased_males, fill_group)) +
+  geom_col_pattern(aes(fill = fill_group, pattern = status, pattern_fill = status),
+                   pattern_density = 0.3) +
+  scale_pattern_manual(values = c("Females" = "none",
+                                  "Dominant males" = "stripe",
+                                  "Subordinate males" = "circle"), guide = "none") +
+  scale_pattern_fill_manual(values = c("Females" = "none",
+                                       "Dominant males" = "black",
+                                       "Subordinate males" = "white"), guide = "none") +
+  scale_fill_viridis_d(option = "plasma",  guide = "none") +
+  scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2",
+                              "Mixed \n Group3", "Mixed \n Group4",
+                              "Male \n Group", "Female \n Group")) +
+  ylim(c(0, 50)) +
+  labs(x = "", y = "Chases per night \n directed to male bats") +
   theme_serif() +
-  scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2", "Mixed \n Group3",
-                              "Mixed \n Group4")) +
+  theme(axis.text = element_text(size = 15, family = "serif"))
+
+f_chase <- sex_chases %>% 
+  left_join(aests %>%  select(IdLabel, fill_group)) %>% 
+  ggplot(aes(group, freq_chased_females, fill_group)) +
+  geom_col_pattern(aes(fill = fill_group, pattern = status, pattern_fill = status),
+                   pattern_density = 0.3) +
+  scale_pattern_manual(values = c("Females" = "none",
+                                  "Dominant males" = "stripe",
+                                  "Subordinate males" = "circle"), guide = "none") +
+  scale_pattern_fill_manual(values = c("Females" = "none",
+                                       "Dominant males" = "black",
+                                       "Subordinate males" = "white"), guide = "none") +
+  scale_fill_viridis_d(option = "plasma", guide = "none") +
+  scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2",
+                              "Mixed \n Group3", "Mixed \n Group4",
+                              "Male \n Group", "Female \n Group")) +
+  ylim(c(0, 50)) +
+  labs(x = "", y = "Chases per night \n directed to female bats") +
+  theme_serif() +
+  theme(axis.text = element_text(size = 15, family = "serif"))
+
+prop_chase <- sex_chases %>% 
+  ggplot(aes(group, prop_chased_males, color = sex)) +
+  geom_jitter(aes(size = freq_chased_males + freq_chased_females), width = 0.4, alpha = 0.6) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  scale_shape_identity() +
+  scale_size(guide = "none") +
+  scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2",
+                              "Mixed \n Group3", "Mixed \n Group4",
+                              "Male \n Group", "Female \n Group")) +
   scale_color_viridis_d(direction = -1, name = "", labels = c("Female", "Male")) +
-  labs(x = "", y = "Proportion of chases directed to male bats")
+  labs(x = "", y = "Proportion of chases \n directed to male bats") +
+  theme_serif() +
+  theme(axis.text = element_text(size = 15, family = "serif"))
+
+ggarrange(m_chase, f_chase, prop_chase, labels = c("A", "B", "C"),
+          font.label = list(size = 18, family = "serif"))
+
+# highest Glicko rating or rank does not necessarily mean highest frequency of chases/
+# "games played", but low n point stands
+
+simbats <-  tibble(chaser = "C", chased = "B", outcome = c(1, 1)) %>% 
+  bind_rows(tibble(chaser = rep("B", 10), chased = rep("C", 10), outcome = 1)) %>% 
+  bind_rows(tibble(chaser = rep("A", 4), chased = c("B", "B", "C", "C"), outcome = 1)) %>% 
+  mutate(day = 1:n()) %>% 
+  select(day, everything())
+
+glicko(simbats)
+
+
+intake_lastnights <- vis_summaries %>% 
+  filter(rev_night < 3) %>% 
+  group_by(group, phase, sex, IdLabel) %>% 
+  summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur)))
+
+chase_nectar %>% 
+  distinct(IdLabel, glicko_rank) %>% 
+  right_join(intake_lastnights) %>%
+  mutate(sex = factor(sex, levels = c("m", "f"))) %>% 
+  ggplot(aes(glicko_rank, vol_hr, shape = sex)) +
+  geom_point() +
+  facet_grid(phase ~ group, labeller = labeller(phase = phase_label,
+                                                group = group_label)) +
+  scale_x_continuous(breaks = 1:6) +
+  # scale_color_viridis_d(direction = -1, name = "", labels = c("Female", "Male")) +
+  labs(x = "Within-group rank (from Glicko ratings)",
+       y = bquote("Nectar intake ["~mL~h^-1*"]")) +
+  scale_shape_manual("", labels = c("Male", "Female"),
+                     values = c(16, 1)) +
+  theme_serif()
+  
