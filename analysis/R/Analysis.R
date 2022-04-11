@@ -110,6 +110,8 @@ only_chases <- allnights_n %>%
   mutate(outcome = 1) %>% 
   left_join(rev_count)
 
+write.table(only_chases, file = paste0(folder, "ChaseEvents.csv"), sep = ";", row.names = FALSE)
+
 gl <- only_chases %>% 
   filter(rev_night < 3, cond == "test") %>% 
   select(-rev_night, -cond) %>% 
@@ -176,8 +178,8 @@ prior.1 <- list(R = list(V = 1, nu = 0.002),
                          G2 = list(V = diag(1), nu = 1, 
                                    alpha.mu = c(0), alpha.V = diag(1)*10000)))
 
-#prior.1a<-list(R = list(V=1, nu = 0.002), G = list(G1 = list(V = diag(2), nu = 0.002), 
-#G2 = list(V = 1, nu = 0.002)))
+# prior.1a<-list(R = list(V=1, nu = 0.002), G = list(G1 = list(V = diag(1), nu = 0.002),
+# G2 = list(V = 1, nu = 0.002)))
 
 set.seed(42)
 mcmc_chases <- MCMCglmm(cbind(n_chases, n_detections - n_chases) ~ sex * phase + weight, 
@@ -185,6 +187,7 @@ mcmc_chases <- MCMCglmm(cbind(n_chases, n_detections - n_chases) ~ sex * phase +
                      data = as.data.frame(chase_summ), family = "multinomial2", pr = TRUE,
                      prior = prior.1, verbose = FALSE, saveX = TRUE, saveZ = TRUE,
                      nitt = 200E3, thin = 100, burnin = 100E3)
+
 summary(mcmc_chases)
 
 geweke.plot(mcmc_chases$VCV)
@@ -200,8 +203,10 @@ mcmc_chased <- MCMCglmm(cbind(n_chased, n_detections - n_chased) ~ sex * phase +
                         data = as.data.frame(chase_summ), family = "multinomial2", pr = TRUE,
                         prior = prior.1, verbose = FALSE, saveX = TRUE, saveZ = TRUE,
                         nitt = 200E3, thin = 100, burnin = 100E3)
+
 summary(mcmc_chased)
 geweke.plot(mcmc_chased$VCV)
+plot.acfs(mcmc_chased$VCV)
 plot(mcmc_chased)
 
 
@@ -979,7 +984,7 @@ ggarrange(m_chase, f_chase, prop_chase, labels = c("A", "B", "C"),
           font.label = list(size = 18, family = "serif"))
 
 # highest Glicko rating or rank does not necessarily mean highest frequency of chases/
-# "games played", but low n point stands
+# "games played", however it is also true thaat estimates based on a small number of chases are more uncertain
 
 simbats <-  tibble(chaser = "C", chased = "B", outcome = c(1, 1)) %>% 
   bind_rows(tibble(chaser = rep("B", 10), chased = rep("C", 10), outcome = 1)) %>% 
@@ -989,16 +994,34 @@ simbats <-  tibble(chaser = "C", chased = "B", outcome = c(1, 1)) %>%
 
 glicko(simbats)
 
+# 
+# intake_lastnights <- vis_summaries %>% 
+#   filter(rev_night < 3) %>% 
+#   group_by(group, phase, sex, IdLabel) %>% 
+#   summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur)))
+# 
+# chase_nectar %>% 
+#   distinct(IdLabel, glicko_rank) %>% 
+#   right_join(intake_lastnights) %>%
+#   mutate(sex = factor(sex, levels = c("m", "f"))) %>% 
+#   ggplot(aes(glicko_rank, vol_hr, shape = sex)) +
+#   geom_point() +
+#   facet_grid(phase ~ group, labeller = labeller(phase = phase_label,
+#                                                 group = group_label)) +
+#   scale_x_continuous(breaks = 1:6) +
+#   # scale_color_viridis_d(direction = -1, name = "", labels = c("Female", "Male")) +
+#   labs(x = "Within-group rank (from Glicko ratings)",
+#        y = bquote("Nectar intake ["~mL~h^-1*"]")) +
+#   scale_shape_manual("", labels = c("Male", "Female"),
+#                      values = c(16, 1)) +
+#   theme_serif()
+  
 
-intake_lastnights <- vis_summaries %>% 
-  filter(rev_night < 3) %>% 
-  group_by(group, phase, sex, IdLabel) %>% 
-  summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur)))
+#### from here R1
 
-chase_nectar %>% 
-  distinct(IdLabel, glicko_rank) %>% 
-  right_join(intake_lastnights) %>%
-  mutate(sex = factor(sex, levels = c("m", "f"))) %>% 
+# uncorrected data
+
+chase_summ %>% 
   ggplot(aes(glicko_rank, vol_hr, shape = sex)) +
   geom_point() +
   facet_grid(phase ~ group, labeller = labeller(phase = phase_label,
@@ -1010,4 +1033,162 @@ chase_nectar %>%
   scale_shape_manual("", labels = c("Male", "Female"),
                      values = c(16, 1)) +
   theme_serif()
+
+
+raw_plots <- function(tib, groupname, measure) {
   
+  measure <- enquo(measure)
+  label_m <- as_label(enquo(measure))
+  
+  axis_label <- paste("Number of", str_remove(as_label(enquo(measure)), "n_"))
+  if (str_detect(axis_label, "chased")) axis_label <- "Number of chases received"
+  
+  tib <- tib %>% 
+    ungroup() %>%
+    filter(group == groupname) %>%
+    rename(night = group_night) %>%
+    group_by(IdLabel, status, night, phase) %>% 
+    summarise(!!measure := sum(!!measure))
+  
+  
+  tib %>%
+    ggplot(aes(phase, !!measure, fill = IdLabel)) +
+    geom_col_pattern(aes(fill = IdLabel, pattern = status, pattern_fill = status),
+                     pattern_density = 0.3) +
+    scale_pattern_manual(values = c("Females" = "none",
+                                    "Dominant males" = "stripe",
+                                    "Subordinate males" = "circle"), guide = "none") +
+    scale_pattern_fill_manual(values = c("Females" = "none",
+                                         "Dominant males" = "black",
+                                         "Subordinate males" = "white"), guide = "none") +
+    # scale_x_discrete(breaks = c("cl", "dstr")) +
+    scale_fill_viridis_d(option = "turbo", guide = "none") +
+    theme_serif() +
+    theme(axis.text.x = element_text(size = 14, family = "serif")) +
+    labs(x = "Phase", y = axis_label) +
+    facet_grid(IdLabel ~ night,
+               labeller = labeller(night = label_both))
+  
+  #                                             phase = phase_label))
+  
+}
+
+chase_summ_test <- chase_summ %>%
+  filter(group_night > 0) %>% 
+  left_join(statuses) %>% 
+  mutate(phase = factor(phase, levels = c(1, 2), labels = c("cl", "dstr")))
+
+chase_summ_test %>% 
+  raw_plots("6f", n_chased)
+
+# ?chase_summ_test %>% 
+ggplot(aes(phase, n, fill = IdLabel)) +
+  geom_col_pattern(aes(fill = IdLabel, pattern = status, pattern_fill = status),
+                   pattern_density = 0.3) +
+  scale_pattern_manual(values = c("Females" = "none",
+                                  "Dominant males" = "stripe",
+                                  "Subordinate males" = "circle"), guide = "none") +
+  scale_pattern_fill_manual(values = c("Females" = "none",
+                                       "Dominant males" = "black",
+                                       "Subordinate males" = "white"), guide = "none") +
+  # scale_x_continuous(breaks = 1:10) +
+  scale_fill_viridis_d(option = "turbo", guide = "none") +
+  theme_serif() +
+  theme(axis.text.x = element_text(size = 14, family = "serif")) +
+  labs(x = "Flower", y = "Number of rewarded visits")
+
+
+ch_all <-  chase_summ %>% 
+  filter(cond == "test") %>%
+  # filter(phase == 1, cond == "test") %>%  
+  mutate(tr_chases = asin(sqrt(prop_chases)),
+         tr_chased = asin(sqrt(prop_chased))) %>% 
+  group_by(sex, group, IdLabel) %>% 
+  summarise(tr_chases = mean(tr_chases),
+            tr_chased = mean(tr_chased))
+
+ch_all %>% 
+  ggplot(aes(sex, tr_chases, fill = sex)) +
+  geom_boxplot() +
+  geom_jitter() +
+  scale_fill_viridis_d() 
+
+t.test(ch_all$tr_chases ~ ch_all$sex, alternative = "two.sided")
+
+ch_all %>% 
+  ggplot(aes(sex, tr_chased, fill = sex)) +
+  geom_boxplot() +
+  geom_jitter() +
+  scale_fill_viridis_d() 
+
+t.test(ch_all$tr_chased ~ ch_all$sex, alternative = "two.sided")
+
+ch_s <- chase_summ %>% 
+  # filter(cond == "test") %>%
+  filter(cond == "test", !group %in% c("6f", "6m")) %>%
+  mutate(tr_chases = asin(sqrt(prop_chases)),
+         tr_chased = asin(sqrt(prop_chased))) %>% 
+  group_by(sex, group) %>% 
+  summarise(tr_chases = mean(tr_chases),
+            tr_chased = mean(tr_chased))
+
+
+ch_s %>% 
+  ggplot(aes(sex, tr_chases, fill = sex)) +
+  geom_boxplot() +
+  geom_jitter() +
+  scale_fill_viridis_d() 
+
+  
+t.test(ch_s$tr_chases ~ ch_s$sex, alternative = "two.sided")
+
+ch_s %>% 
+  ggplot(aes(sex, tr_chased, fill = sex)) +
+  geom_boxplot() +
+  geom_jitter() +
+  scale_fill_viridis_d() 
+
+
+t.test(ch_s$tr_chased ~ ch_s$sex, alternative = "two.sided")
+
+
+# prop_chase over night
+
+chase_summ %>% 
+  left_join(aests) %>% 
+  filter(cond == "test", !group %in% c("6f", "6m")) %>%
+  # group_by(sex, group, IdLabel, group_night) %>% 
+  # summarise(prop_chases = mean(prop_chases)) %>% 
+  ggplot(aes(group_night, prop_chases, group = IdLabel, shape = shape)) +
+  geom_point(aes(fill = sex, size = size)) +
+  geom_line() +
+  facet_grid(group ~ phase, labeller = labeller(phase = phase_label,
+                                                group = group_label)) +
+  labs(x = "Night",
+       y = "Proportion of chasing") +
+  scale_shape_identity() +
+  scale_size_identity() +
+  scale_fill_manual(name = "", values = c("black", "white"), labels = c("Male", "Female")) +
+  theme_serif() +
+  theme(legend.position = "right", 
+        legend.title = element_blank(),
+        # legend.text = element_text(size = 12, family = "serif", hjust = 0.5),
+        strip.text = element_text(size = 13, family = "serif")) +
+  guides(fill = guide_legend(override.aes = list(shape = 21,
+                                                 size = 3))) 
+
+
+# how often was a female the ind with highest prop of chasing
+max_chases <- chase_summ %>% 
+  filter(cond == "test", !group %in% c("6f", "6m")) %>%
+  ungroup() %>% 
+  group_by(group_night, group, phase) %>%
+  slice_max(prop_chases, with_ties = FALSE) %>% 
+  ungroup()
+
+max_chases %>% 
+  count(phase, group_night, group) %>% 
+  count(group, phase)
+
+max_chases %>% 
+  count(phase, sex)

@@ -506,6 +506,57 @@ m-\>m appear aggressive\
 
 ## Supplementary figures
 
+
+(ref:overview) Change of individual nectar consumption from the clumped condition (left) to the distributed condition (right) for all experimental groups (rows). Males are showed with filled symbols and females with open symbols. Small symbols indicate dominant individuals, according to proportion of chasing and nectar intake during the last two nights of the experiment.
+
+```{r, overview, fig.cap="(ref:overview)", fig.width=7, fig.height=8}
+cons_all <- vis_summaries %>%
+  filter(cond == "test") %>%
+  group_by(group, group_night, IdLabel, sex, phase) %>%
+  summarise(vol_consumed = sum(vol_consumed)) 
+
+phase_label <- c(`1` = "clumped", `2` = "distributed") 
+group_label <- c("mixed1" = "Mixed 1", "mixed2" = "Mixed 2",
+                 "mixed3" = "Mixed 3", "mixed4" = "Mixed 4",
+                 "6m" = "Males-only", "6f" = "Females-only")
+
+aests <- cons_all %>% 
+  ungroup() %>% 
+  distinct(sex, IdLabel, group) %>% 
+  left_join(statuses) %>% 
+  arrange(group, sex, status, IdLabel) %>%
+  mutate(shape = rep(c(21:25, 21), 6),
+         size = ifelse(str_detect(status, "Dom") | IdLabel == "Ind31", 1, 2),
+         fill_group = factor(rep(1:6, 6)))
+
+cons_all %>%
+  left_join(aests) %>% 
+  # mutate(Individual = factor(IdLabel, levels = ordered_ids)) %>% 
+  ggplot(aes(x = group_night, y = vol_consumed, shape = shape, group = IdLabel)) +
+  geom_line() +
+  geom_point(aes(fill = sex, size = size)) +
+  labs(x = "Night",
+       y = "Nectar intake [mL]") +
+  facet_grid(group ~ phase, labeller = labeller(phase = phase_label,
+                                                group = group_label)) +
+  # scale_shape_manual(values = rep(c(21:25, 21), 6), guide = "none") +
+  scale_shape_identity() +
+  scale_size_identity() +
+  scale_fill_manual(name = "", values = c("black", "white"), labels = c("Male", "Female")) +
+  # scale_size_manual(values = rep(c(2, 2, 2, 2, 2, 1), 6), guide = "none") +
+  scale_x_continuous(breaks = c(1:9), limits = c(0.8, 9)) +
+  scale_y_continuous(breaks = c(0, 10, 20), limits = c(0, 24)) +
+  theme_serif() +
+  theme(legend.position = "right", 
+        legend.title = element_blank(),
+        # legend.text = element_text(size = 12, family = "serif", hjust = 0.5),
+        strip.text = element_text(size = 13, family = "serif")) +
+  guides(fill = guide_legend(override.aes = list(shape = 21,
+                                                 size = 3))) 
+
+```
+
+
 (ref:intaketime) The standard deviation of group nectar consumption was used to measure the between individual differences in nectar intake. It was calculated for the clumped (left panel) and the distributed (right panel) resource conditions, separately for males (dashed lines) and females (continuous lines) from each experimental group (different colors). For visualization only, lines give the corresponding fits based on locally weighted scatterplot smoothing (loess). The statistical analysis was based on linear regression (see Methods).
 
 ```{r, intaketime, fig.cap="(ref:intaketime)", fig.width=14}
@@ -536,16 +587,9 @@ vol_sd_time %>%
   labs(x = "Experimental night", y = "Standard deviation of\nnectar intake")
 ```
 
-(ref:glicko) Glicko ratings within the six experimental groups. Over the last two experimental nights, the males (closed symbols) with the highest proportion of chasing events were also the individuals with the highest Glicko rating in each group (panels) during the clumped resource condition. There was no such correspondence for females in the female-only group (right panel). Numbers at symbols give the Glicko rating in thousands. 
+(ref:glicko) Glicko ratings within the six experimental groups. Over the last two experimental nights, the males (closed symbols) with the highest proportion of chasing events were also the individuals with the highest Glicko rating in each group (panels) during the clumped resource condition. There was no such correspondence for females in the female-only group (right panel). Numbers at symbols give the Glicko rating in thousands.
 
 ```{r, glicko, fig.align="center", fig.cap="(ref:glicko)" , fig.height=4, fig.width=17}
-
-group_label <- c("mixed1" = "Mixed\nGroup1",
-                 "mixed2" = "Mixed\nGroup2",
-                 "mixed3" = "Mixed\nGroup3",
-                 "mixed4" = "Mixed\nGroup4",
-                 "6m" = "Males-only\nGroup",
-                 "6f" = "Females-only\nGroup")
 chase_nectar %>% 
   ggplot(aes(glicko_rank, prop_chases, shape = sex)) +
   geom_point(size = 2) +
@@ -565,6 +609,41 @@ chase_nectar %>%
   facet_grid(. ~ group, labeller = labeller(group = group_label)) +
   labs(x = "Within-group rank (from Glicko ratings)", y = "Proportion chasing")
 ```
+
+
+(ref:chasernectar) Male bats with the highest Glicko ratings had the highest nectar intake rates during the clumped, but not during the distributed resource condition.
+
+```{r, chasernectar, fig.align="center", fig.cap="(ref:chasernectar)", fig.height=6, fig.width=11}
+intake_lastnights <- vis_summaries %>% 
+  filter(rev_night < 3) %>% 
+  group_by(group, phase, sex, IdLabel) %>% 
+  summarise(vol_hr = sum(vol_consumed)/sum(as.numeric(phase_dur)))
+
+chase_nectar %>% 
+  distinct(IdLabel, glicko_rank) %>% 
+  right_join(intake_lastnights) %>%
+  mutate(sex = factor(sex, levels = c("m", "f"))) %>% 
+  ggplot(aes(glicko_rank, vol_hr, shape = sex)) +
+  geom_point() +
+  facet_grid(phase ~ group, labeller = labeller(phase = phase_label,
+                                                group = group_label)) +
+  scale_x_continuous(breaks = 1:6) +
+  # scale_color_viridis_d(direction = -1, name = "", labels = c("Female", "Male")) +
+  labs(x = "Within-group rank (from Glicko ratings)",
+       y = bquote("Nectar intake ["~mL~h^-1*"]")) +
+  scale_shape_manual("", labels = c("Male", "Female"),
+                     values = c(16, 1)) +
+  theme_serif() +
+  theme(
+    # panel.background = element_rect(fill = "#BFD5E3", colour = "#6D9EC1", 
+    #                                 size = 2, linetype = "solid"),
+    panel.grid.major = element_line(size = 0.5, linetype = 'solid', 
+                                    colour = "gray"))
+
+```
+
+
+
 
 (ref:chaserchasing) The relationship between proportion of chases versus the proportion of being chased out of all detections for female (right) and male (left) individuals in the six experimental groups (different colors).
 
@@ -611,7 +690,6 @@ knitr::include_graphics("./images/wing.pdf")
 ```{r, malesonly, fig.cap="(ref:malesonly)", fig.width=12}
 onlyrewarded <- read.csv2(paste0(folder, "RewardedVisits.csv"), dec = ".")
 
-phase_label <- c(`1` = "clumped", `2` = "distributed") 
 
 flower_distribution <- function(tib, groupname, phases) {
   if (phases != "both") {
