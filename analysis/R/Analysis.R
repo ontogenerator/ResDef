@@ -1066,7 +1066,6 @@ raw_plots <- function(tib, groupname, measure) {
     scale_pattern_fill_manual(values = c("Females" = "none",
                                          "Dominant males" = "black",
                                          "Subordinate males" = "white"), guide = "none") +
-    # scale_x_discrete(breaks = c("cl", "dstr")) +
     scale_fill_viridis_d(option = "turbo", guide = "none") +
     theme_serif() +
     theme(
@@ -1077,9 +1076,6 @@ raw_plots <- function(tib, groupname, measure) {
     labs(x = "", y = axis_label) +
     facet_grid(IdLabel ~ night,
                labeller = labeller(night = label_both))
-  
-  #                                             phase = phase_label))
-  
 }
 
 #(a) the number of visits to feeders by each bat of each sex during

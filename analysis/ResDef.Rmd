@@ -430,23 +430,33 @@ stat.test2 <- cons_contrasts %>%
   mutate(p.adj = ifelse(p.adj < 0.001, "<0.001", round(p.adj, 3)))
 ```
 
-(ref:nectarcontrasts) Comparison of nectar intake during the first and last two nights of the experiment depending on sex and social status. During the clumped resource distribution (left in each panel), already at the beginning of the experiment (right panel) subordinate males collected significantly less nectar than dominant males and females. At the end of the experiment (left panel), females, dominant and subordinate males differed to a large extent in their nectar consumption. During the distributed resource condition at the beginning of the experiment subordinate males received less nectar than females, but these differences disappeared by the end of the experiment. Numbers above brackets are the p values from unequal variance T tests (Welch's tests), adjusted for multiple comparisons using the Holms method. Contrasts between conditions were from paired Welch’s tests. For clarity, only p values smaller than 0.1 are shown.
+(ref:nectarcontrasts) Comparison of nectar intake during the first and last two nights of the experiment depending on sex and social status. During the clumped resource distribution (left in each panel), already at the beginning of the experiment (right panel) subordinate males collected significantly less nectar than dominant males and females. At the end of the experiment (left panel), females, dominant and subordinate males differed in their nectar consumption. During the distributed resource condition at the beginning of the experiment subordinate males received less nectar than females, but this difference disappeared by the end of the experiment. Numbers above brackets are the p values from unequal variance T tests (Welch's tests), adjusted for multiple comparisons using the Holms method. Contrasts between conditions were from paired Welch’s tests. For clarity, only p values smaller than 0.1 are shown. Each status group represents data from the same individuals. For clarity, only the lines connecting the same dominant males are shown.  
 
 ```{r, nectarcontrasts, fig.cap="(ref:nectarcontrasts)", fig.width=12, fig.height=5}
 ggboxplot(cons_contrasts, x = "phase", y = "vol_hr",
-          color = "status", line.color = "gray", line.size = 0.4,
-          palette = c("dodgerblue3","grey50","purple"),
-          add = "jitter") +
-  facet_grid(. ~ partition) +
+          color = "status",  line.color = "gray", line.size = 0.4,
+          add = "dotplot", alpha = 0.5,
+          palette = c("dodgerblue3","grey50","purple"), facet.by = "partition") +
+  geom_line(data = cons_contrasts %>%  filter(status == "Dominant males"),
+            aes(phase, vol_hr, group = IdLabel, color = status), alpha = 0.1,
+            position = position_nudge(x = -0.25)) +
+  # geom_line(data = cons_contrasts %>%  filter(status == "Subordinate males"), 
+  #           aes(phase, vol_hr, group = IdLabel, color = status), alpha = 0.1,
+  #           position = position_nudge(x = 0.25)) +
+  # geom_line(data = cons_contrasts %>%  filter(status == "Females"), 
+  #           aes(phase, vol_hr, group = IdLabel, color = status), alpha = 0.1) +
   # stat_pvalue_manual(
   #   stat.test,  label = "p.adj.signif", tip.length = 0.02, hide.ns = TRUE
   # ) +
+  # scale_fill_discrete(guide = "legend") +
   stat_pvalue_manual(
     stat.test,  label = "p.adj", tip.length = 0.02
   ) +
    stat_pvalue_manual(
     stat.test2,  label = "p.adj", tip.length = 0.02
   ) +
+  scale_color_manual(guide = "legend", name = "", values = c("dodgerblue3","grey50","purple")) +
+  scale_fill_manual(guide = "legend", name = "", values = c("dodgerblue3","grey50","purple")) +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.1))) +
   labs(x = "", y = bquote("Nectar intake ["~mL~h^-1*"]"), color = "") +
   theme_serif()
@@ -555,10 +565,99 @@ cons_all %>%
 
 ```
 
-(ref:sexchases) Frequency of chase events directed to bats of either sex. (**A**, **B**)  The colored bars give the total number of chase events over the main experiment by each individual from each group (abscissa) towards male (**A**) and female (**B**) bats. The dominant males are shown with black stripes and the subordinate males are shown with white dots. (**C**) Relative frequency of chase events directed towards male bats for male (purple) and female (yellow) bats form all experimental groups (abscissa). The size of the dots represents the absolute number of chase events recorded.
+(ref:rawdetgr1) Raw number of detections for all bats in group 1.
+
+```{r, rawdetgr1, fig.cap="(ref:rawdetgr1)", fig.width=14}
+raw_plots <- function(tib, groupname, measure) {
+  
+  measure <- enquo(measure)
+  label_m <- as_label(enquo(measure))
+  
+  axis_label <- paste("Number of", str_remove(as_label(enquo(measure)), "n_"))
+  if (str_detect(axis_label, "chased")) axis_label <- "Number of chases received"
+  
+  tib <- tib %>% 
+    ungroup() %>%
+    filter(group == groupname) %>%
+    rename(night = group_night) %>%
+    group_by(IdLabel, status, night, phase) %>% 
+    summarise(!!measure := sum(!!measure))
+  
+  
+  tib %>%
+    ggplot(aes(phase, !!measure, fill = IdLabel)) +
+    geom_col_pattern(aes(fill = IdLabel, pattern = status, pattern_fill = status),
+                     pattern_density = 0.3) +
+    scale_pattern_manual(values = c("Females" = "none",
+                                    "Dominant males" = "stripe",
+                                    "Subordinate males" = "circle"), guide = "none") +
+    scale_pattern_fill_manual(values = c("Females" = "none",
+                                         "Dominant males" = "black",
+                                         "Subordinate males" = "white"), guide = "none") +
+    scale_fill_viridis_d(option = "turbo", guide = "none") +
+    theme_serif() +
+    theme(
+      axis.text.x = element_text(size = 14, family = "serif",
+                                 angle = 90, vjust = .5, hjust = 1),
+      axis.text.y = element_text(size = 14, family = "serif")
+      ) +
+    labs(x = "", y = axis_label) +
+    facet_grid(IdLabel ~ night,
+               labeller = labeller(night = label_both))
+}
+
+chase_summ_test <- chase_summ %>%
+  filter(group_night > 0) %>% 
+  left_join(statuses) %>% 
+  mutate(phase = factor(phase, levels = c(1, 2), labels = c("clumped", "dispersed")))
+
+chase_summ_test %>% 
+  raw_plots("mixed1", n_detections)
+
+```
+
+(ref:rawdetgr2) Raw number of detections for all bats in group 2.
+
+```{r, rawdetgr2, fig.cap="(ref:rawdetgr2)", fig.width=14}
+chase_summ_test %>% 
+  raw_plots("mixed2", n_detections)
+```
+
+(ref:rawdetgr3) Raw number of detections for all bats in group 3.
+
+```{r, rawdetgr3, fig.cap="(ref:rawdetgr3)", fig.width=14}
+chase_summ_test %>% 
+  raw_plots("mixed3", n_detections)
+```
+
+(ref:rawdetgr4) Raw number of detections for all bats in group 4.
+
+```{r, rawdetgr4, fig.cap="(ref:rawdetgr4)", fig.width=14}
+chase_summ_test %>% 
+  raw_plots("mixed4", n_detections)
+```
 
 
-```{r, sexchases, fig.cap="(ref:sexchases)", fig.width=13}
+(ref:rawdetgrm) Raw number of detections for all bats in males-only group.
+
+```{r, rawdetgrm, fig.cap="(ref:rawdetgrm)", fig.width=14}
+chase_summ_test %>% 
+  raw_plots("6m", n_detections)
+```
+
+
+(ref:rawdetgrf) Raw number of detections for all bats in females-only group.
+
+```{r, rawdetgrf, fig.cap="(ref:rawdetgrf)", fig.width=14}
+chase_summ_test %>% 
+  raw_plots("6f", n_detections)
+```
+
+
+(ref:sexchases) Frequency of chase events directed to bats of either sex. (**A**, **B**)  Colored bars give the frequency of chase events per night (total chases divided by number of nights) over the main experiment by each individual from each group (abscissa) towards male (**A**) and female (**B**) bats. The dominant males are shown with black stripes and the subordinate males are shown with white dots. (**C**) Relative frequency of chase events directed towards male bats for male (purple) and female (yellow) bats form all experimental groups (abscissa). The size of the dots represents the frequency of chase events per night.
+
+
+```{r, sexchases, fig.cap="(ref:sexchases)", fig.width=14}
 
 bat_info <- read.csv2(file = paste0(folder, "metadata/conditions.csv"),
                       header = TRUE,
@@ -587,8 +686,8 @@ sex_chases <- only_chases %>%
   group_by(IdLabel, sex, group) %>% 
   summarise(prop_chased_males = mean(sex_chased == "m"),
             prop_chased_females = mean(sex_chased == "f"),
-            freq_chased_males = sum(sex_chased == "m")/max(group_night),
-            freq_chased_females = sum(sex_chased == "f")/max(group_night)) %>%
+            freq_chased_males = sum(sex_chased == "m") / max(group_night),
+            freq_chased_females = sum(sex_chased == "f") / max(group_night)) %>%
   left_join(statuses) %>%
   mutate(shape = ifelse(str_detect(status, "Dom"), 18, 19))
 
@@ -644,22 +743,23 @@ prop_chase <- sex_chases %>%
   scale_color_viridis_d(direction = -1, name = "", labels = c("Female", "Male")) +
   labs(x = "", y = "Proportion of chases \n directed to male bats") +
   theme_serif() +
-  theme(axis.text = element_text(size = 15, family = "serif"))
+  theme(axis.text = element_text(size = 15, family = "serif"),
+        legend.position = "right")
 
-prop_legend <- prop_chase +
-  lims(y = c(0, 0)) +
-  theme_void() +
-  theme(legend.position = c(0.09, 0.6),
-        legend.key.size = unit(1, "cm"),
-        legend.text = element_text(size =  12, family = "serif"),
-        legend.title = element_text(size = 15, face = "bold", family = "serif"))+
-  guides(colour = guide_legend(override.aes = list(size = 6)))
+# prop_legend <- prop_chase +
+#   lims(y = c(0, 0)) +
+#   theme_void() +
+#   theme(legend.position = c(0.09, 0.6),
+#         legend.key.size = unit(1, "cm"),
+#         legend.text = element_text(size =  12, family = "serif"),
+#         legend.title = element_text(size = 15, face = "bold", family = "serif")) +
+#   guides(colour = guide_legend(override.aes = list(size = 6)))
 
-prop_chase <- prop_chase +
-  scale_size(guide = "none") +
-  scale_color_viridis_d(guide = "none")
+# prop_chase <- prop_chase +
+#   scale_size(guide = "none") +
+#   scale_color_viridis_d(guide = "none")
 
-ggarrange(m_chase, f_chase, prop_chase, prop_legend, labels = c("A", "B", "C", ""),
+ggarrange(m_chase, f_chase, prop_chase, labels = c("A", "B", "C", ""),
           font.label = list(size = 18, family = "serif"))
 ```
 
