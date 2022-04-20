@@ -85,6 +85,7 @@ chase_summ <- allnights_n %>%
   group_by(group_night, cond, IdLabel, group, sex, phase) %>% 
   summarise(n_detections = n(),
             n_chases = sum(chase),
+            n_feedings = sum(rewarded),
             prop_chases = n_chases/n_detections)
 
 chased_n <- allnights_n %>% 
@@ -1185,3 +1186,33 @@ max_chases %>%
 
 max_chases %>% 
   count(phase, sex)
+
+# proportion of feedings, on which a bat was chased
+
+
+# fig_feeding_chased <- 
+chase_summ %>%
+  mutate(group = factor(group, levels = c("mixed1", "mixed2",
+                                          "mixed3", "mixed4",
+                                          "6m", "6f")),
+         sex = factor(sex, levels = c("m", "f"))) %>% 
+  # filter(phase == 1, cond == "test") %>% 
+  filter(cond == "test") %>% 
+  # mutate(prop_feeding_chased = n_chased / n_feedings) %>% 
+  group_by(sex, group, IdLabel) %>% 
+  summarise(prop_feeding_chased = sum(n_chased) / sum(n_feedings)) %>% 
+  ggplot() +
+  geom_beeswarm(aes(group, prop_feeding_chased, color = sex),
+                alpha = 0.7, cex = 2, size = 4) +
+  labs(title = "Being chased", x = "", y = "Proportion chased") +
+  theme_serif() +
+  scale_color_viridis_d(guide = "none") +
+  scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2", "Mixed \n Group3",
+                              "Mixed \n Group4", "Male \n Group", "Female \n Group")) +
+  scale_y_continuous() +
+  theme(axis.ticks.x = element_line(size = 1.2),
+        axis.text.x = element_text(size = 16),
+        axis.text.y = element_text(size = 18))
+
+
+

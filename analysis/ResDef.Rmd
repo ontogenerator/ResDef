@@ -572,6 +572,9 @@ raw_plots <- function(tib, groupname, measure) {
   
   measure <- enquo(measure)
   label_m <- as_label(enquo(measure))
+  max_measure <- tib %>% 
+    pull(!!measure) %>% 
+    max()
   
   axis_label <- paste("Number of", str_remove(as_label(enquo(measure)), "n_"))
   if (str_detect(axis_label, "chased")) axis_label <- "Number of chases received"
@@ -595,8 +598,11 @@ raw_plots <- function(tib, groupname, measure) {
                                          "Dominant males" = "black",
                                          "Subordinate males" = "white"), guide = "none") +
     scale_fill_viridis_d(option = "turbo", guide = "none") +
+    geom_text(aes(label = !!measure), vjust = -0.25) +
+    expand_limits(y = max_measure * 1.15) +
     theme_serif() +
     theme(
+      # panel.spacing = unit(2, "lines"),
       axis.text.x = element_text(size = 14, family = "serif",
                                  angle = 90, vjust = .5, hjust = 1),
       axis.text.y = element_text(size = 14, family = "serif")
@@ -653,8 +659,49 @@ chase_summ_test %>%
   raw_plots("6f", n_detections)
 ```
 
+(ref:rawchgr1) Raw number of chase events for all bats in group 1.
 
-(ref:sexchases) Frequency of chase events directed to bats of either sex. (**A**, **B**)  Colored bars give the frequency of chase events per night (total chases divided by number of nights) over the main experiment by each individual from each group (abscissa) towards male (**A**) and female (**B**) bats. The dominant males are shown with black stripes and the subordinate males are shown with white dots. (**C**) Relative frequency of chase events directed towards male bats for male (purple) and female (yellow) bats form all experimental groups (abscissa). The size of the dots represents the frequency of chase events per night.
+```{r, rawchgr1, fig.cap="(ref:rawchgr1)", fig.width=14}
+chase_summ_test %>% 
+  raw_plots("mixed1", n_chases)
+```
+
+(ref:rawchgr2) Raw number of chase events for all bats in group 2.
+
+```{r, rawchgr2, fig.cap="(ref:rawchgr2)", fig.width=14}
+chase_summ_test %>% 
+  raw_plots("mixed2", n_chases)
+```
+
+(ref:rawchgr3) Raw number of chase events for all bats in group 3.
+
+```{r, rawchgr3, fig.cap="(ref:rawchgr3)", fig.width=14}
+chase_summ_test %>% 
+  raw_plots("mixed3", n_chases)
+```
+
+(ref:rawchgr4) Raw number of chase events for all bats in group 4.
+
+```{r, rawchgr4, fig.cap="(ref:rawchgr4)", fig.width=14}
+chase_summ_test %>% 
+  raw_plots("mixed4", n_chases)
+```
+
+(ref:rawchgrm) Raw number of chase events for all bats in males-only group.
+
+```{r, rawchgrm, fig.cap="(ref:rawchgrm)", fig.width=14}
+chase_summ_test %>% 
+  raw_plots("6m", n_chases)
+```
+
+(ref:rawchgrf) Raw number of chase events for all bats in females-only group.
+
+```{r, rawchgrf, fig.cap="(ref:rawchgrf)", fig.width=14}
+chase_summ_test %>% 
+  raw_plots("6f", n_chases)
+```
+
+(ref:sexchases) Frequency of chase events directed to bats of either sex. (**A**, **B**)  Colored bars give the frequency of chase events per night (total chases divided by number of nights) over the main experiment by each individual from each group (abscissa) towards male (**A**) and female (**B**) bats. The dominant males are shown with black stripes and the subordinate males are shown with white dots. (**C**) Relative frequency of chase events directed towards male bats for male (purple) and female (yellow) bats from all experimental groups (abscissa). The size of the dots represents the mean frequency of chase events per night.
 
 
 ```{r, sexchases, fig.cap="(ref:sexchases)", fig.width=14}
@@ -763,7 +810,37 @@ ggarrange(m_chase, f_chase, prop_chase, labels = c("A", "B", "C", ""),
           font.label = list(size = 18, family = "serif"))
 ```
 
+(ref:rewpernight) Number of rewared visits per night (mean $\pm$ SD)
 
+
+```{r, rewpernight, fig.cap="(ref:rewpernight)", fig.width=10}
+
+freq_rewarded <- onlyrewarded %>% 
+  left_join(aests) %>% 
+  mutate(phase = factor(phase, levels = c(1, 2), labels = c("clumped", "dispersed"))) %>% 
+  count(group_night, phase, group, sex, IdLabel, size)
+  
+
+summ_freq_rewarded <- freq_rewarded %>%
+  group_by(phase, group, sex, IdLabel, size) %>%
+  summarise(mean_rewarded = mean(n))
+
+freq_rewarded %>%
+  ggplot() +
+  # geom_point(alpha = 0.3) +
+  stat_summary(aes(phase, n, color = sex, group = IdLabel)) +
+  geom_line(data = summ_freq_rewarded, 
+            aes(phase, mean_rewarded, color = sex, group = IdLabel, linetype = factor(-size))) +
+  facet_grid(. ~ group, labeller = labeller(group = group_label)) +
+  scale_color_viridis_d(name = "",
+                        labels = c("Male", "Female")) +
+  scale_linetype(guide = "none") +
+  labs(x = "", y = "Mean number of rewarded visits per night") +
+  theme_serif() +
+  theme(
+    axis.text.x = element_text(size = 14, family = "serif",
+                               angle = 90, vjust = .5, hjust = 1))
+```
 
 (ref:intaketime) The standard deviation of group nectar consumption was used to measure the between individual differences in nectar intake. It was calculated for the clumped (left panel) and the distributed (right panel) resource conditions, separately for males (dashed lines) and females (continuous lines) from each experimental group (different colors). For visualization only, lines give the corresponding fits based on locally weighted scatterplot smoothing (loess). The statistical analysis was based on linear regression (see Methods).
 
