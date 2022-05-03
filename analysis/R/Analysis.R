@@ -175,9 +175,9 @@ mcmc_to_tibble <- function(object) { # extract the model summary into a tibble
 
 prior.1 <- list(R = list(V = 1, nu = 0.002),
                 G = list(G1 = list(V = diag(1), nu = 1, 
-                                   alpha.mu = c(0), alpha.V = diag(1)*10000),
+                                   alpha.mu = 0, alpha.V = diag(1)*10000),
                          G2 = list(V = diag(1), nu = 1, 
-                                   alpha.mu = c(0), alpha.V = diag(1)*10000)))
+                                   alpha.mu = 0, alpha.V = diag(1)*10000)))
 
 # prior.1a<-list(R = list(V=1, nu = 0.002), G = list(G1 = list(V = diag(1), nu = 0.002),
 # G2 = list(V = 1, nu = 0.002)))
@@ -235,19 +235,20 @@ vol_sd_time <- vis_summaries %>%
 
 write.table(vol_sd_time, file = paste0(folder, "IntakeTime.csv"), sep = ";", row.names = FALSE)
 
-
+# inverse Wishart prior
 prior.2 <- list(R = list(V = 1, nu = 0.002),
                 G = list(G1 = list(V = diag(2), nu = 0.002)))
-
-#prior.1a<-list(R = list(V=1, nu = 0.002), G = list(G1 = list(V = diag(2), nu = 0.002), 
-#G2 = list(V = 1, nu = 0.002)))
+# parameter expanded prior gives same results
+# prior.2a <- list(R = list(V = 1, nu = 0.002),
+#                 G = list(G1 = list(V = diag(2), nu = 1, 
+#                                    alpha.mu = c(0, 0), alpha.V = diag(2)*10000)))
 
 set.seed(815) 
 mcmc_vol_time <- MCMCglmm(sd_consumed ~ sex + phase + night +
                             sex*phase*night, 
                         random = ~us(1 + night):group,
                         data = as.data.frame(vol_sd_time), family = "gaussian", pr = TRUE,
-                        prior = prior.2, verbose = FALSE, saveX = TRUE, saveZ = TRUE,
+                        prior = prior.2a, verbose = FALSE, saveX = TRUE, saveZ = TRUE,
                         nitt = 200E4, thin = 1000, burnin = 100E3)
 summary(mcmc_vol_time)
 
@@ -1215,4 +1216,35 @@ chase_summ %>%
         axis.text.y = element_text(size = 18))
 
 
+### plot frequency of chase event vs. Glicko rank difference for dom bats in each group
+
+gl_r <- chase_summ %>% 
+  filter(group_night > 0) %>% 
+  ungroup() %>% 
+  distinct(group, IdLabel, glicko_rating) 
+
+gl_subd <- gl_r %>%
+  rename(chased = IdLabel,
+         glicko_subd = glicko_rating)
+
+# perc chases from all chases, not just dominant chases 
+
+perc_chases <- only_chases %>%
+  # left_join(statuses) %>% 
+  filter(group_night > 0) %>% 
+  count(group, IdLabel, chased) %>% 
+  group_by(group) %>% 
+  mutate(perc_chased = n / sum(n)) %>% 
+  left_join(gl_r) %>% 
+  left_join(gl_subd) %>% 
+  mutate(glicko_diff = glicko_rating - glicko_subd) %>% 
+  left_join(statuses) %>% 
+  filter(status == "Dominant males")
+
+
+perc_chases %>% 
+  left_join(sex_info) %>% 
+  ggplot(aes(glicko_diff, perc_chased)) + 
+  geom_point(aes(color = sex_chased)) +
+  facet_wrap(~group)
 
