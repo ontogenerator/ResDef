@@ -240,7 +240,7 @@ prior.2 <- list(R = list(V = 1, nu = 0.002),
                 G = list(G1 = list(V = diag(2), nu = 0.002)))
 # parameter expanded prior gives same results
 # prior.2a <- list(R = list(V = 1, nu = 0.002),
-#                 G = list(G1 = list(V = diag(2), nu = 1, 
+#                 G = list(G1 = list(V = diag(2), nu = 1,
 #                                    alpha.mu = c(0, 0), alpha.V = diag(2)*10000)))
 
 set.seed(815) 
@@ -248,7 +248,7 @@ mcmc_vol_time <- MCMCglmm(sd_consumed ~ sex + phase + night +
                             sex*phase*night, 
                         random = ~us(1 + night):group,
                         data = as.data.frame(vol_sd_time), family = "gaussian", pr = TRUE,
-                        prior = prior.2a, verbose = FALSE, saveX = TRUE, saveZ = TRUE,
+                        prior = prior.2, verbose = FALSE, saveX = TRUE, saveZ = TRUE,
                         nitt = 200E4, thin = 1000, burnin = 100E3)
 summary(mcmc_vol_time)
 

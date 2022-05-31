@@ -169,7 +169,7 @@ knitr::include_graphics("./images/design.pdf")
 
 ## (c) Experimental procedure
 
-Six bats were randomly selected from the colony (out of the total of ca. 150 individuals) and were tested simultaneously as a group. Four experimental groups consisted of three males together with three females (mixed groups), whereas one group consisted of six males, and another of six females. No bats were re-used between experiments. All bats were weighed before the experiment.\
+Six bats were randomly selected from the colony (out of the total of ca. 150 individuals) and were tested simultaneously as a group. Four experimental groups consisted of three males together with three females (mixed groups), whereas one group consisted of six males, and another of six females. No bats were re-used between experiments. We weighed all bats before the experiment.\
 During the nightly experiments, in addition to the nectar provided by artificial flowers, bats had access to pollen and water and to 6$mL$ of additional food containing 1.2g NektarPlus (Nekton, Keltern, Germany) and 1.8g milk powder (Milasan Folgemilch 2, Sunval Baby Food GmbH, Mannheim, Germany) dissolved in water. Rewards at flowers consisted always of 30$\mu L$ nectar (15% w/w sugar concentration, sucrose: fructose 1:2). Before the experimental schedule started, individuals were allowed to familiarize themselves with the set-up and the artificial flowers. Since during this training phase the plastic cover was removed, the two flower patches were not spatially separated and every flower visit was rewarded. This phase lasted for one to four nights until each bat visited the flowers regularly. One female of the first mixed group did not visit any artificial flower during the first night and was replaced by another female.\
 During the experiment, the two flower patches were covered and spatially separated (Fig. \@ref(fig:design). Experimental nights were divided into two phases. During the first phase of the night only one of the two flower patches was rewarding, and therefore the resources were spatially clumped at a single location. The fixed time interval between rewards at each flower was 60s. During the second phase of the night both patches gave rewards, resources were evenly distributed across the two patches, and the fixed time interval between two rewards at a flower was increased to 120s. Therefore, the amount of food available per unit time did not change during the whole night; only the spatial distribution of food changed from the clumped resource condition with one patch rewarding (five flowers) during the first phase of the night to the distributed resource condition with two patches rewarding (ten flowers) during the second phase of the night. With this experimental schedule, the maximal amount of nectar the bats could collect was 108$mL$, which corresponds to 18$mL$ nectar per individual per night, roughly 150% of their daily requirement [@thomson_bats_2001]. The side of the rewarding patch during the first phase of the night was chosen pseudo-randomly and the same patch was never chosen in more than two consecutive nights. For the mixed groups, the duration of the clumped resource condition was six hours and the experiment lasted nine nights (seven nights for the first mixed group). For the same-sex groups, the duration of the first part of the night was variable (range = 4-8h, mean = 6h) and the experiment lasted eight nights for the male group and seven nights for the female group.
 
@@ -468,7 +468,7 @@ Qualitative behavioral observations of four hours of video recordings revealed s
 
 # 4. Discussion
 
-Similar to observations in free-living *Glossophaga* populations, in this experiment *G. mutica* competed for nectar not only by exploitation but also by interference competition. However, the results show that the predisposition to defend resources and the influence of interference competition on individual nectar intake differed significantly between the sexes. Only a subset of individuals, most notably males in the mixed-sex groups, successfully defended flower patches. However, due to the small sample size of same-sex groups, more data is needed to understand the role of interference competition when only one sex is present. Dominant individuals were characterized by the highest frequency of chasing other individuals away from profitable flowers, by the highest Glicko ratings, and by a substantial increase in nectar intake during the time periods of active defense by the end of the experimental run. Although the dominant males in the mixed groups chased females and other males equally often, only the nectar intake of subordinate males but not of the females was affected by this behavior. Thus, male-initiated interference competition increased the difference in nectar intake between males but did not affect females. The frequency of aggressive interactions was higher, and males only defended resources successfully when the available nectar was concentrated at only one flower patch. This supports the hypothesis that clumped resources favor an increase in aggressive interactions [@grant_whether_1993].
+Similar to observations in free-living *Glossophaga* populations [@lemke_foraging_1984; @tschapka_pollination_2003], in this experiment *G. mutica* competed for nectar not only by exploitation but also by interference competition. However, the results show that the predisposition to defend resources and the influence of interference competition on individual nectar intake differed significantly between the sexes. Only a subset of individuals, most notably males in the mixed-sex groups, successfully defended flower patches. However, due to the small sample size of same-sex groups, more data are needed to understand the role of interference competition when only one sex is present. Dominant individuals were characterized by the highest frequency of chasing other individuals away from profitable flowers, by the highest Glicko ratings, and by a substantial increase in nectar intake during the time periods of active defense by the end of the experimental run. Although the dominant males in the mixed groups chased females and other males equally often, only the nectar intake of subordinate males but not of the females was affected by this behavior. Thus, male-initiated interference competition increased the difference in nectar intake between males but did not affect females. The frequency of aggressive interactions was higher, and males only defended resources successfully when the available nectar was concentrated at only one flower patch. This supports the hypothesis that clumped resources favor an increase in aggressive interactions [@grant_whether_1993].
 
 ## (a) Sex-dependent resource defense and its differential effect on nectar intake, depending on social status
 To our knowledge, this study is the first report of sex-dependent differences in resource defense behavior of neotropical nectar-feeding bats. In mixed sex groups, females seemed to be much less affected by the behavior of dominant males whereas subordinate males were excluded at least partially from the defended flower patch. This finding is consistent with observations of free-flying *G. commissarisi*, in which males visited on average a smaller number of artificial flowers than females did [@nachev_behavioral_2019], presumably because of interactions with other males. There are two possible explanations for this differential effect on subordinate males and females. On the one hand, dominant males might just not be capable of excluding females. On the other hand, dominant males could tolerate females in their defended patch because they might receive additional benefits, for example tolerating females could lead to an increase in (future) mating opportunities. Similar social dynamics have been described in the insectivorous bat species *Myotis daubentonii* [@senior_sex_2005]. Dominant males of this species temporarily exclude other males from profitable habitats whereas females are tolerated and in addition to securing access to resources, the successful exclusion of other males has been shown to increase the reproductive success of dominant males [@senior_sex_2005]. Similarly, it has been observed that male purple-throated carib hummingbirds (*Eulampis jugularis*), which successfully defend highly profitable feeding-territories against other males while sharing the available resources with females, experienced an increase in their mating success [@temeles_mate_2010].\
@@ -565,9 +565,9 @@ cons_all %>%
 
 ```
 
-(ref:rawdetgr1) Raw number of detections for all bats in group 1.
+(ref:rawdetgr1) Raw number of detections for all bats in group 1. Dotted bars represent subordinate males, striped bars represent dominant males and unhatched bars - females.
 
-```{r, rawdetgr1, fig.cap="(ref:rawdetgr1)", fig.width=14}
+```{r, rawdetgr1, fig.cap="(ref:rawdetgr1)", fig.height=7, fig.width=14}
 raw_plots <- function(tib, groupname, measure) {
   
   measure <- enquo(measure)
@@ -622,31 +622,31 @@ chase_summ_test %>%
 
 ```
 
-(ref:rawdetgr2) Raw number of detections for all bats in group 2.
+(ref:rawdetgr2) Raw number of detections for all bats in group 2. Same notation as in Fig. \@ref(fig:rawdetgr1), but the colors correspond to different individuals. 
 
-```{r, rawdetgr2, fig.cap="(ref:rawdetgr2)", fig.width=14}
+```{r, rawdetgr2, fig.cap="(ref:rawdetgr2)", fig.height=7, fig.width=14}
 chase_summ_test %>% 
   raw_plots("mixed2", n_detections)
 ```
 
-(ref:rawdetgr3) Raw number of detections for all bats in group 3.
+(ref:rawdetgr3) Raw number of detections for all bats in group 3. Same notation as in Fig. \@ref(fig:rawdetgr1), but the colors correspond to different individuals.
 
-```{r, rawdetgr3, fig.cap="(ref:rawdetgr3)", fig.width=14}
+```{r, rawdetgr3, fig.cap="(ref:rawdetgr3)", fig.height=7, fig.width=14}
 chase_summ_test %>% 
   raw_plots("mixed3", n_detections)
 ```
 
-(ref:rawdetgr4) Raw number of detections for all bats in group 4.
+(ref:rawdetgr4) Raw number of detections for all bats in group 4. Same notation as in Fig. \@ref(fig:rawdetgr1), but the colors correspond to different individuals.
 
-```{r, rawdetgr4, fig.cap="(ref:rawdetgr4)", fig.width=14}
+```{r, rawdetgr4, fig.cap="(ref:rawdetgr4)", fig.height=7, fig.width=14}
 chase_summ_test %>% 
   raw_plots("mixed4", n_detections)
 ```
 
 
-(ref:rawdetgrm) Raw number of detections for all bats in males-only group.
+(ref:rawdetgrm) Raw number of detections for all bats in males-only group. Same notation as in Fig. \@ref(fig:rawdetgr1), but the colors correspond to different individuals.
 
-```{r, rawdetgrm, fig.cap="(ref:rawdetgrm)", fig.width=14}
+```{r, rawdetgrm, fig.cap="(ref:rawdetgrm)", fig.height=7, fig.width=14}
 chase_summ_test %>% 
   raw_plots("6m", n_detections)
 ```
@@ -654,57 +654,57 @@ chase_summ_test %>%
 
 (ref:rawdetgrf) Raw number of detections for all bats in females-only group.
 
-```{r, rawdetgrf, fig.cap="(ref:rawdetgrf)", fig.width=14}
+```{r, rawdetgrf, fig.cap="(ref:rawdetgrf)", fig.height=7, fig.width=14}
 chase_summ_test %>% 
   raw_plots("6f", n_detections)
 ```
 
-(ref:rawchgr1) Raw number of chase events for all bats in group 1.
+(ref:rawchgr1) Raw number of chase events for all bats in group 1. Same notation as in Fig. \@ref(fig:rawdetgr1), but the colors correspond to different individuals.
 
-```{r, rawchgr1, fig.cap="(ref:rawchgr1)", fig.width=14}
+```{r, rawchgr1, fig.cap="(ref:rawchgr1)", fig.height=7, fig.width=14}
 chase_summ_test %>% 
   raw_plots("mixed1", n_chases)
 ```
 
-(ref:rawchgr2) Raw number of chase events for all bats in group 2.
+(ref:rawchgr2) Raw number of chase events for all bats in group 2. Same notation as in Fig. \@ref(fig:rawdetgr1), but the colors correspond to different individuals.
 
-```{r, rawchgr2, fig.cap="(ref:rawchgr2)", fig.width=14}
+```{r, rawchgr2, fig.cap="(ref:rawchgr2)", fig.height=7, fig.width=14}
 chase_summ_test %>% 
   raw_plots("mixed2", n_chases)
 ```
 
-(ref:rawchgr3) Raw number of chase events for all bats in group 3.
+(ref:rawchgr3) Raw number of chase events for all bats in group 3. Same notation as in Fig. \@ref(fig:rawdetgr1), but the colors correspond to different individuals.
 
-```{r, rawchgr3, fig.cap="(ref:rawchgr3)", fig.width=14}
+```{r, rawchgr3, fig.cap="(ref:rawchgr3)", fig.height=7, fig.width=14}
 chase_summ_test %>% 
   raw_plots("mixed3", n_chases)
 ```
 
-(ref:rawchgr4) Raw number of chase events for all bats in group 4.
+(ref:rawchgr4) Raw number of chase events for all bats in group 4. Same notation as in Fig. \@ref(fig:rawdetgr1), but the colors correspond to different individuals.
 
-```{r, rawchgr4, fig.cap="(ref:rawchgr4)", fig.width=14}
+```{r, rawchgr4, fig.cap="(ref:rawchgr4)", fig.height=7, fig.width=14}
 chase_summ_test %>% 
   raw_plots("mixed4", n_chases)
 ```
 
-(ref:rawchgrm) Raw number of chase events for all bats in males-only group.
+(ref:rawchgrm) Raw number of chase events for all bats in males-only group. Same notation as in Fig. \@ref(fig:rawdetgr1), but the colors correspond to different individuals.
 
-```{r, rawchgrm, fig.cap="(ref:rawchgrm)", fig.width=14}
+```{r, rawchgrm, fig.cap="(ref:rawchgrm)", fig.height=7, fig.width=14}
 chase_summ_test %>% 
   raw_plots("6m", n_chases)
 ```
 
 (ref:rawchgrf) Raw number of chase events for all bats in females-only group.
 
-```{r, rawchgrf, fig.cap="(ref:rawchgrf)", fig.width=14}
+```{r, rawchgrf, fig.cap="(ref:rawchgrf)", fig.height=7, fig.width=14}
 chase_summ_test %>% 
   raw_plots("6f", n_chases)
 ```
 
-(ref:sexchases) Frequency of chase events directed to bats of either sex. (**A**, **B**)  Colored bars give the frequency of chase events per night (total chases divided by number of nights) over the main experiment by each individual from each group (abscissa) towards male (**A**) and female (**B**) bats. The dominant males are shown with black stripes and the subordinate males are shown with white dots. (**C**) Relative frequency of chase events directed towards male bats for male (purple) and female (yellow) bats from all experimental groups (abscissa). The size of the dots represents the mean frequency of chase events per night.
+(ref:sexchases) Frequency of chase events directed to bats of either sex. (**A**, **B**)  Colored bars give the frequency of chase events per night (total chases divided by number of nights) over the main experiment by each individual from each group (abscissa) towards male (**A**) and female (**B**) bats. The dominant males are shown with stripes and the subordinate males are shown with dots. (**C**) Relative frequency of chase events directed towards male bats for male (purple) and female (yellow) bats from all experimental groups (abscissa). The size of the dots represents the mean frequency of chase events per night.
 
 
-```{r, sexchases, fig.cap="(ref:sexchases)", fig.width=14}
+```{r, sexchases, fig.cap="(ref:sexchases)", fig.height=7, fig.width=15}
 
 bat_info <- read.csv2(file = paste0(folder, "metadata/conditions.csv"),
                       header = TRUE,
@@ -810,18 +810,20 @@ ggarrange(m_chase, f_chase, prop_chase, labels = c("A", "B", "C", ""),
           font.label = list(size = 18, family = "serif"))
 ```
 
-(ref:rewpernight) Number of rewarded visits per night (mean $\pm$ SE) during the clumped and dispersed reward conditions for male (purple) and female (yellow) bats in each experimental group (panels). Data from the same individuals are connected with lines. Individuals are connected with dashed lines.
+(ref:rewpernight) Number of rewarded visits per night (mean $\pm$ SE) during the clumped and dispersed reward conditions for male (purple) and female (yellow) bats in each experimental group (panels). Data from the same individuals are connected with lines. Individuals with highest intake rates (most "dominant" individuals) are connected with dashed lines.
 
 
-```{r, rewpernight, fig.cap="(ref:rewpernight)", fig.width=10}
+```{r, rewpernight, fig.cap="(ref:rewpernight)", fig.height=4, fig.width=10}
 onlyrewarded <- read.csv2(paste0(folder, "RewardedVisits.csv"), dec = ".")
 
 freq_rewarded <- onlyrewarded %>% 
   left_join(aests) %>% 
-  mutate(phase = factor(phase, levels = c(1, 2), labels = c("clumped", "dispersed"))) %>% 
+  mutate(phase = factor(phase, levels = c(1, 2), labels = c("clumped", "dispersed")),
+         group = factor(group, levels = c("mixed1", "mixed2",
+                                          "mixed3", "mixed4",
+                                          "6m", "6f"))) %>% 
   count(group_night, phase, group, sex, IdLabel, size)
   
-
 summ_freq_rewarded <- freq_rewarded %>%
   group_by(phase, group, sex, IdLabel, size) %>%
   summarise(mean_rewarded = mean(n))
@@ -836,7 +838,7 @@ freq_rewarded %>%
   scale_color_viridis_d(name = "",
                         labels = c("Male", "Female")) +
   scale_linetype(guide = "none") +
-  labs(x = "", y = "Mean number of rewarded visits per night") +
+  labs(x = "", y = "Mean number of \n rewarded visits per night") +
   theme_serif() +
   theme(
     axis.text.x = element_text(size = 14, family = "serif",
@@ -875,7 +877,7 @@ vol_sd_time %>%
 
 (ref:glicko) Glicko ratings within the six experimental groups. Over the last two experimental nights, the males (closed symbols) with the highest proportion of chasing events were also the individuals with the highest Glicko rating in each group (panels) during the clumped resource condition. There was no such correspondence for females in the female-only group (right panel). Numbers at symbols give the Glicko rating in thousands.
 
-```{r, glicko, fig.align="center", fig.cap="(ref:glicko)" , fig.height=4, fig.width=17}
+```{r, glicko, fig.align="center", fig.cap="(ref:glicko)", fig.height=4, fig.width=17}
 chase_nectar %>% 
   ggplot(aes(glicko_rank, prop_chases, shape = sex)) +
   geom_point(size = 2) +
@@ -897,7 +899,7 @@ chase_nectar %>%
 ```
 
 
-(ref:chasernectar) Male bats with the highest Glicko ratings had the highest nectar intake rates during the clumped, but not during the distributed resource condition.
+(ref:chasernectar) Male bats with the highest Glicko ratings had the highest nectar intake rates during the clumped, but generally not during the distributed resource condition.
 
 ```{r, chasernectar, fig.align="center", fig.cap="(ref:chasernectar)", fig.height=6, fig.width=11}
 intake_lastnights <- vis_summaries %>% 
@@ -971,7 +973,7 @@ knitr::include_graphics("./images/wing.pdf")
 ```
 
 \newpage
-(ref:malesonly) Distribution of rewarded visits across flowers for the six bats in the males-only group. The colored bars give the number of rewarded visits of each individual at the ten flowers during the clumped (top) and distributed (bottom) resource conditions for each experimental night (columns). The dominant males are shown with black stripes and the subordinate males are shown with white dots. This was the only group with two males behaving as dominant. On the last night, rather than sharing all flowers within the defended patch, the dominant males partitioned the patch into two subpatches, with each bat defending its own partition.
+(ref:malesonly) Distribution of rewarded visits across flowers for the six bats in the males-only group. The colored bars give the number of rewarded visits of each individual at the ten flowers during the clumped (top) and distributed (bottom) resource conditions for each experimental night (columns). The dominant males are shown with stripes and the subordinate males are shown with dots. This was the only group with two males behaving as dominant. On the last night, rather than sharing all flowers within the defended patch, the dominant males partitioned the patch into two subpatches, with each bat defending its own partition.
 
 ```{r, malesonly, fig.cap="(ref:malesonly)", fig.width=12}
 
@@ -1021,7 +1023,7 @@ flower_distribution(onlyrewarded, "6m", phases = "both")
 flower_distribution(onlyrewarded, "6f", phases = "both")
 ```
 
-(ref:mixed1) Distribution of rewarded visits across flowers for the six bats in mixed group 1. The colored bars give the number of rewarded visits of each individual at the ten flowers during the clumped (top) and distributed (bottom) resource conditions for each experimental night (columns). The dominant male is shown with black stripes, the subordinate males are shown with white dots, and the females are shown with solid bars. Due to a technical malfunction on night 4, there were no rewards delivered in the distributed resource condition and the data were excluded from analysis.
+(ref:mixed1) Distribution of rewarded visits across flowers for the six bats in mixed group 1. The colored bars give the number of rewarded visits of each individual at the ten flowers during the clumped (top) and distributed (bottom) resource conditions for each experimental night (columns). The dominant male is shown with stripes, the subordinate males are shown with dots, and the females are shown with solid bars. Due to a technical malfunction on night 4, there were no rewards delivered in the distributed resource condition and the data were excluded from analysis.
 
 ```{r, mixed1, fig.cap="(ref:mixed1)", fig.width=12}
 flower_distribution(onlyrewarded, "mixed1", phases = "both")
