@@ -217,7 +217,7 @@ est_chases <- est_chases %>%
   bind_rows(est_chased) %>% 
   mutate(CI = paste0("(", conf.low, ", ", conf.high, ")"),
          term = str_replace(term, "sexf", "sex (female)"),
-         term = str_replace(term, "phase2", "condition (distributed)"))
+         term = str_replace(term, "phase2", "treatment (dispersed)"))
 
 write.table(est_chases, file = paste0(folder, "mcmcChases.csv"), sep = ";", row.names = FALSE)
 
@@ -258,7 +258,7 @@ plot(mcmc_vol_time)
 est_vol_time <- mcmc_to_tibble(mcmc_vol_time) %>% 
   mutate(CI = paste0("(", conf.low, ", ", conf.high, ")"),
          term = str_replace(term, "sexf", "sex (female)"),
-         term = str_replace(term, "phase2", "condition (distributed)"),
+         term = str_replace(term, "phase2", "treatment (dispersed)"),
          term = str_replace(term, "group_night", "night"))
 
 write.table(est_vol_time, file = paste0(folder, "mcmcIntakeTime.csv"), sep = ";", row.names = FALSE)
@@ -281,13 +281,13 @@ females_nightph2 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "sexf:nig
   mcmc_vol_time$Sol[, "phase2:night"] +  mcmc_vol_time$Sol[, "sexf:phase2:night"] # double check!
 females_night_contrast <- females_nightph2 - females_nightph1
 
-intake_interactions <- mode_HPD(females_phase2) %>% # for females, sign. difference between resource conditions
-  rbind(mode_HPD(night_phase2)) %>%  # slope of night for males equals zero in phase 2 (distributed resource condition)
-  rbind(mode_HPD(sex_phase2)) %>% # no difference between sexes in phase 2 (distributed resource condition)
+intake_interactions <- mode_HPD(females_phase2) %>% # for females, sign. difference between resource treatments
+  rbind(mode_HPD(night_phase2)) %>%  # slope of night for males equals zero in phase 2 (dispersed resource treatment)
+  rbind(mode_HPD(sex_phase2)) %>% # no difference between sexes in phase 2 (dispersed resource treatment)
   rbind(mode_HPD(sex_night_phase2)) %>% # no difference in slopes between sexes in phase 2 either
   rbind(mode_HPD(females_nightph1)) %>% # no effect of night in females in clumped
-  rbind(mode_HPD(females_nightph2)) %>% # nor in distributed condition
-  rbind(mode_HPD(females_night_contrast)) %>% # no difference in slope for females between conditions
+  rbind(mode_HPD(females_nightph2)) %>% # nor in dispersed treatment
+  rbind(mode_HPD(females_night_contrast)) %>% # no difference in slope for females between treatments
   as_tibble() %>%
   mutate(term = c("females_phase2", "night_phase2", "sex_phase2",
                   "sex_night_phase2", "females_night", "females_night_phase2",
@@ -303,8 +303,8 @@ vol_sd_time %>%
   # ggplot(aes(group_night, sd_consumed, color = group)) +
   geom_point() +
   geom_smooth(aes(group = group2, linetype = sex), method = "lm") +
-  facet_grid(. ~ phase, labeller = labeller(phase = c(`1` = "Clumped resource condition",
-                                                      `2` = "Distributed resource condition"))) +
+  facet_grid(. ~ phase, labeller = labeller(phase = c(`1` = "Clumped resource treatment",
+                                                      `2` = "Dispersed resource treatment"))) +
   scale_color_viridis_d(option = "turbo", labels = c("Mixed Group 1", "Mixed Group 2",
                                                      "Mixed Group 3", "Mixed Group 4",
                                                      "Males-only Group", "Females-only Group"),
@@ -331,7 +331,7 @@ write.table(onlyrewarded,
 cons_clumped <- cons_group1 %>%
   filter(phase == 1) %>%
   ggplot(aes(x = group_night, y = vol_consumed, shape = Individual, group = Individual)) +
-  labs(x = "Night", title = "Clumped condition - one patch",
+  labs(x = "Night", title = "Clumped treatment - one patch",
        y = "Nectar intake [mL]") +
   ylim(c(0, 18)) +
   scale_shape_manual(values = c(21, 22, 24, 21, 22, 24), guide = "none") +
@@ -349,7 +349,7 @@ cons_clumped <- cons_group1 %>%
 cons_distr <- cons_group1 %>% 
   filter(phase == 2, group_night != 4) %>%
   ggplot(aes(x = group_night, y = vol_consumed)) +
-  labs(x = "Night", title = "Distributed condition - two patches",
+  labs(x = "Night", title = "Dispersed treatment - two patches",
        y = "") +
   scale_shape_manual(values = c(21, 22, 24, 21, 22, 24), guide = "none") +
   scale_color_manual(values = c(rgb(red = 46, green = 117, blue = 182, max = 255),
@@ -459,7 +459,7 @@ chase_males <- chase_nectar %>%
   stat_ellipse(data = . %>%  filter(vol_hr > 0.75, prop_chases > 0.003),
                aes(prop_chases, vol_hr), level = 0.89, linetype = 2) +
   labs(x = "Proportion of chasing", 
-       title = "Clumped resource condition \n Males",
+       title = "Clumped resource treatment \n Males",
        y = expression(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
   # geom_vline(xintercept = 0.003, linetype = 3) +
   # geom_hline(yintercept = 0.75, linetype = 3) +
@@ -481,7 +481,7 @@ chase_females <- chase_nectar %>%
                                    "Group 6 Males", "Group 6 Females"),
                         drop = FALSE, direction = -1) +
   labs(x = "Proportion of chasing", 
-       title = "Clumped resource condition \n Females",
+       title = "Clumped resource treatment \n Females",
        y = bquote(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
   # geom_vline(xintercept = 0.003, linetype = 3) +
   # geom_hline(yintercept = 0.75, linetype = 3) +
@@ -613,7 +613,7 @@ chased_males <- chase_nectar %>%
                                           "Males-only Group", "Females-only Group"),
                      values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
   labs(x = "Proportion of being chased", 
-       title = "Clumped resource condition \n Males",
+       title = "Clumped resource treatment \n Males",
        y = expression(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
   # geom_vline(xintercept = 0.003, linetype = 3) +
   # geom_hline(yintercept = 0.75, linetype = 3) +
@@ -631,7 +631,7 @@ chased_females <- chase_nectar %>%
                                           "Males-only Group", "Females-only Group"),
                      values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
   labs(x = "Proportion of being chased", 
-       title = "Clumped resource condition \n Females",
+       title = "Clumped resource treatment \n Females",
        y = bquote(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
   # geom_vline(xintercept = 0.003, linetype = 3) +
   # geom_hline(yintercept = 0.75, linetype = 3) +
@@ -655,7 +655,7 @@ chased_males <- chase_nectar %>%
                                           "Males-only Group", "Females-only Group"),
                      values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
   labs(x = "# being chased", 
-       title = "Clumped resource condition \n Males",
+       title = "Clumped resource treatment \n Males",
        y = expression(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
   # geom_vline(xintercept = 0.003, linetype = 3) +
   # geom_hline(yintercept = 0.75, linetype = 3) +
@@ -675,7 +675,7 @@ chased_females <- chase_nectar %>%
                                           "Males-only Group", "Females-only Group"),
                      values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
   labs(x = "# being chased", 
-       title = "Clumped resource condition \n Females",
+       title = "Clumped resource treatment \n Females",
        y = bquote(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
   # geom_vline(xintercept = 0.003, linetype = 3) +
   # geom_hline(yintercept = 0.75, linetype = 3) +
@@ -703,7 +703,7 @@ chases_males <- chase_nectar %>%
                                           "Males-only Group", "Females-only Group"),
                      values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
   labs(x = "# chasing", 
-       title = "Clumped resource condition \n Males",
+       title = "Clumped resource treatment \n Males",
        y = expression(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
   # geom_vline(xintercept = 0.003, linetype = 3) +
   # geom_hline(yintercept = 0.75, linetype = 3) +
@@ -723,7 +723,7 @@ chases_females <- chase_nectar %>%
                                           "Males-only Group", "Females-only Group"),
                      values = c(1, 2, 16, 17, 8, 4), drop = FALSE) +
   labs(x = "# chasing", 
-       title = "Clumped resource condition \n Females",
+       title = "Clumped resource treatment \n Females",
        y = bquote(atop("Nectar intake ["~mL~h^-1*"]", "(Over last two nights)"))) +
   # geom_vline(xintercept = 0.003, linetype = 3) +
   # geom_hline(yintercept = 0.75, linetype = 3) +
@@ -748,8 +748,8 @@ cons_contrasts <- vis_summaries %>%
     TRUE ~ NA_character_
   ),
   partition = factor(partition, levels = c("First night", "Second night")),
-  phase = factor(phase, labels = c("Clumped resource\ncondition",
-                                   "Distributed resource\ncondition")))
+  phase = factor(phase, labels = c("Clumped resource\ntreatment",
+                                   "Dispersed resource\ntreatment")))
 
 cons_contrasts <- cons_contrasts %>% 
   ungroup() %>%
@@ -871,7 +871,7 @@ cons_all <- vis_summaries %>%
   group_by(group, group_night, IdLabel, sex, phase) %>%
   summarise(vol_consumed = sum(vol_consumed)) 
 
-phase_label <- c(`1` = "clumped", `2` = "distributed") 
+phase_label <- c(`1` = "clumped", `2` = "dispersed") 
 group_label <- c("mixed1" = "Mixed 1", "mixed2" = "Mixed 2",
                  "mixed3" = "Mixed 3", "mixed4" = "Mixed 4",
                  "6m" = "Males-only", "6f" = "Females-only")

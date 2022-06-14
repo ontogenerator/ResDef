@@ -169,13 +169,13 @@ knitr::include_graphics("./images/design.pdf")
 
 ## (c) Experimental procedure
 
-Six bats were randomly selected from the colony (out of the total of ca. 150 individuals) and were tested simultaneously as a group. Four experimental groups consisted of three males together with three females (mixed groups), whereas one group consisted of six males, and another of six females. No bats were re-used between experiments. We weighed all bats before the experiment.\
+Six bats were randomly selected from the colony (out of the total of ca. 150 individuals) and were tested simultaneously as a group. Four experimental groups consisted of three males together with three females (mixed groups), whereas one group consisted of six males, and four others of six females. No bats were re-used between experiments. We weighed all bats before the experiment.\
 During the nightly experiments, in addition to the nectar provided by artificial flowers, bats had access to pollen and water and to 6$mL$ of additional food containing 1.2g NektarPlus (Nekton, Keltern, Germany) and 1.8g milk powder (Milasan Folgemilch 2, Sunval Baby Food GmbH, Mannheim, Germany) dissolved in water. Rewards at flowers consisted always of 30$\mu L$ nectar (15% w/w sugar concentration, sucrose: fructose 1:2). Before the experimental schedule started, individuals were allowed to familiarize themselves with the set-up and the artificial flowers. Since during this training phase the plastic cover was removed, the two flower patches were not spatially separated and every flower visit was rewarded. This phase lasted for one to four nights until each bat visited the flowers regularly. One female of the first mixed group did not visit any artificial flower during the first night and was replaced by another female.\
 During the experiment, the two flower patches were covered and spatially separated (Fig. \@ref(fig:design). Experimental nights were divided into two phases. During the first phase of the night only one of the two flower patches was rewarding, and therefore the resources were spatially clumped at a single location. The fixed time interval between rewards at each flower was 60s. During the second phase of the night both patches gave rewards, resources were evenly dispersed across the two patches, and the fixed time interval between two rewards at a flower was increased to 120s. Therefore, the amount of food available per unit time did not change during the whole night; only the spatial distribution of food changed from the clumped resource treatment with one patch rewarding (five flowers) during the first phase of the night to the dispersed resource treatment with two patches rewarding (ten flowers) during the second phase of the night. With this experimental schedule, the maximal amount of nectar the bats could collect was 108$mL$, which corresponds to 18$mL$ nectar per individual per night, roughly 150% of their daily requirement [@thomson_bats_2001]. The side of the rewarding patch during the first phase of the night was chosen pseudo-randomly and the same patch was never chosen in more than two consecutive nights. For the mixed groups, the duration of the clumped resource treatment was six hours and the experiment lasted nine nights (seven nights for the first mixed group). For the same-sex groups, the duration of the first part of the night was variable (range = 4-8h, mean = 6h) and the experiment lasted eight nights for the male group and seven nights for the female group.
 
 ## (d) Chasing behavior
 
-We took the frequency of individuals chasing each other at the artificial flowers as an indicator of the intensity of aggressive interactions between group members. We developed a method to automatically detect and score chasing events using the computer-collected animal identification data from the RFID sensors and flower sensors. In a previous pilot study [@wintergerst_modulators_2018], three mixed groups of bats were video recorded for 24h over 14 nights, and the video data were synchronized to the computer-collected data. During this pilot study flowers were not covered by plastic sheets so that all flowers and the surrounding room were visible on video. From the analysis of the combined data we were able to identify the following pattern of visitation events that reliably indicated a chasing event between two identified individuals: (*i*) an identified bat visited a flower and (*ii*) its visit was instantaneously followed by the detection of a second bat, the chaser, that was detected very briefly (\<200ms) and only by the ID sensor (detection range 5-7cm). Importantly, this second bat never attempted to drink and therefore did not insert its nose into the artificial flower and interrupt the light barrier inside the flower head. This distinguished such a chase from the occasional quick succession of two feeding visits by two bats at the same flower. This automated detection of chasing events not only saves considerable time for the experimenter, but also avoids human observer bias, a common drawback in video analysis. For the 24 hours of combined video data and automatically logged data, all 89 chasing events detected in the computer-logged data were confirmed by video [@wintergerst_modulators_2018]. Therefore, we consider the algorithm for detecting chasing events in the logged data to be highly reliable. Of course, chases did not only occur at the artificial flowers. Thus, our chase numbers are only an indicator of chasing intensity between pairs of bats. For example, in one hour of video we observed 61 chasing events, but only five of those occurred during flower visits and were also automatically detected. However, since with our algorithm (see below) we detected a total of `r total_chases` chasing events (`r glue(nightly_chases$mean[1], " ± ", nightly_chases$sd[1])` events per night during the experiment and only `r glue(nightly_chases$mean[2], " ± ", nightly_chases$sd[2])` during the training nights, mean ± SD) for the 36 participating bats, we considered the automated approach adequate for quantifying within-group dominance relationships. The total number of individual detections per night constrains the number of chasing opportunities detectable with our method. Therefore, we calculated a *chase score* and a *chased score* by dividing the number of observed chases (given or received, respectively) for each bat by the total number of detections for that bat on each night.\
+We took the frequency of individuals chasing each other at the artificial flowers as an indicator of the intensity of aggressive interactions between group members. We developed a method to automatically detect and score chasing events using the computer-collected animal identification data from the RFID sensors and flower sensors. In a previous pilot study [@wintergerst_modulators_2018], three mixed groups of bats were video recorded for 24h over 14 nights, and the video data were synchronized to the computer-collected data. During this pilot study flowers were not covered by plastic sheets so that all flowers and the surrounding room were visible on video. From the analysis of the combined data we were able to identify the following pattern of visitation events that reliably indicated a chasing event between two identified individuals: (*i*) an identified bat visited a flower and (*ii*) its visit was instantaneously followed by the detection of a second bat, the chaser, that was detected very briefly (\<200ms) and only by the ID sensor (detection range 5-7cm). Importantly, this second bat never attempted to drink and therefore did not insert its nose into the artificial flower and interrupt the light barrier inside the flower head. This distinguished such a chase from the occasional quick succession of two feeding visits by two bats at the same flower. This automated detection of chasing events not only saves considerable time for the experimenter, but also avoids human observer bias, a common drawback in video analysis. For the 24 hours of combined video data and automatically logged data, all 89 chasing events detected in the computer-logged data were confirmed by video [@wintergerst_modulators_2018]. Therefore, we consider the algorithm for detecting chasing events in the logged data to be highly reliable. Of course, chases did not only occur at the artificial flowers. Thus, our chase numbers are only an indicator of chasing intensity between pairs of bats. For example, in one hour of video we observed 61 chasing events, but only five of those occurred during flower visits and were also automatically detected. However, since with our algorithm (see below) we detected a total of `r total_chases` chasing events (`r glue(nightly_chases$mean[1], " ± ", nightly_chases$sd[1])` events per night during the experiment and only `r glue(nightly_chases$mean[2], " ± ", nightly_chases$sd[2])` during the training nights, mean ± SD) for the 36 participating bats, we considered the automated approach adequate for quantifying within-group dominance relationships. The total number of individual detections per night constrains the number of chasing opportunities detectable with our method. Therefore, we calculated a *chase score* and a *chased score* by dividing the number of observed chases (directed to others or received from others, respectively) for each bat by the total number of detections for that bat on each night.\
 
 ## (e) Statistical analysis
 
@@ -189,6 +189,9 @@ All statistical analyses were conducted using R [@r_core_team_r:_2021].
 The goal of our experiment was to investigate the sex-specific effects of resource defense in *Glossophaga soricina*, in addition to the potential influence of interference competition on individual nectar intake. The first striking observation we made was the uneven distribution of nectar consumed between the sexes and individuals. For example, in the first mixed group of bats tested, after only two nights the nectar consumption of two males was nearly reduced to zero, whereas the third male increased its consumption substantially (Fig. \@ref(fig:mixedexample)A). This pattern, however, only occurred during the clumped resource treatment. Nectar consumption of females did not change even during the clumped treatment. On the same nights but during the second half of the night, with resources dispersed over two patches, nectar consumption of males and females converged at the end of the experiment (Fig. \@ref(fig:mixedexample)B).
 
 ## (b) Differences between sexes in frequency of chasing and being chased
+
+@@@@@@@@@ Keep Tables 1 and 2, focus on mixed groups. Make other (supp.) tablea to compare females in mixed vs. single-sex groups.
+
 In all mixed groups males chased other bats in front of flowers significantly more often than females did (Fig. \@ref(fig:chases)A, Table \@ref(tab:chasesglmm)). Notably, the frequency of females as active chasers in female-only groups was higher than chasing by females in the mixed groups (Fig. \@ref(fig:chases)A). Although the rate of nectar availability remained constant throughout the night and only the spatial distribution of the resources changed, the number of chasing events was significantly lower during the dispersed resource treatment when rewards were available at both patches (Table \@ref(tab:chasesglmm)). There was no significant difference between the sexes in how often a bat was chased by another individual (Fig. \@ref(fig:chases)B) but individuals were chased less during the dispersed resource treatment (Table \@ref(tab:chasesglmm)). Weight as an indicator of size had no significant effect on chasing frequency or the frequency of being chased (Table \@ref(tab:chasesglmm)).
 
 (ref:mixedexample) Change of individual nectar consumption from the clumped treatment (A) to the dispersed treatment (B) during an experiment of one mixed group (3M, 3F,  symbols show different individuals). (**A**). During the clumped resource treatment (first part of the experimental night) rewards were only available at one patch. The nectar consumption of two subordinate males approached zero after only two nights, whereas the third, dominant, male greatly increased nectar intake during the experiment (males filled symbols). Females (open symbols) on the other hand maintained a stable level of nectar intake. (**B**) During the dispersed resource treatment (second part of the experimental night) rewards were available at both patches. Under this treatment, individuals nearly equalized their level of nectar intake over the course of the experiment. The second part of night 4 was excluded due to technical problems.
@@ -239,7 +242,8 @@ ggarrange(cons_clumped, cons_distr, labels = c("A", "B"),
           font.label = list(size = 18, family = "serif"))
 ```
 
-(ref:chases) Sexes differed in the frequency of chasing or being chased during the clumped resource treatment. (**A**) Males (dark symbols) chased others significantly more than females did (light symbols, Table \@ref(tab:chasesglmm)). Shown are the individual proportions of chasing events over the whole experiment. Notably, in the females-only group some females chased more than any female in the mixed groups. (**B**) Being chased by other bats did not differ significantly between sexes (Table \@ref(tab:chasesglmm)), but the variance of being chased was much higher for males.
+(ref:chases) Sexes differed in the frequency of chasing or being chased during the clumped resource treatment. (**A**) Males (dark symbols) chased others significantly more than females did (light symbols, Table \@ref(tab:chasesglmm)). Shown are the individual proportions of chasing events (chase scores) over the whole experiment. Notably, in the females-only group some females chased more than any female in the mixed groups. (**B**) Being chased by other bats did not differ significantly between sexes (Table \@ref(tab:chasesglmm)), but the variance in the chased score was much higher for males.
+@@@@@ expand with new groups
 
 ```{r, chases, fig.cap="(ref:chases)", fig.width=14}
 
@@ -250,7 +254,7 @@ fig_chases <- chase_summ %>%
   ggplot() +
   geom_beeswarm(aes(group, prop_chases, color = sex),
               alpha = 0.7, cex = 2, size = 4) +
-  labs(title = "Chasing", x = "", y = "Proportion chasing") +
+  labs(title = "Chasing", x = "", y = "Chase score") +
   theme_serif() +
   scale_color_viridis_d(name = "", labels = c("Male", "Female")) +
   scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2", "Mixed \n Group3",
@@ -268,7 +272,7 @@ fig_chased <- chase_summ %>%
   ggplot() +
    geom_beeswarm(aes(group, prop_chased, color = sex),
               alpha = 0.7, cex = 2, size = 4) +
-    labs(title = "Being chased", x = "", y = "Proportion chased") +
+    labs(title = "Being chased", x = "", y = "Chased score") +
   theme_serif() +
   scale_color_viridis_d(guide = "none") +
   scale_x_discrete(labels = c("Mixed \n Group1", "Mixed \n Group2", "Mixed \n Group3",
@@ -321,6 +325,7 @@ est_vol_time %>%
 When plotting chasing events against nectar consumption the data for males fall into two non-overlapping groups. The males of one cluster (Fig. \@ref(fig:chasingnectar)A, inside dashed oval) chased other individuals and consumed more nectar than the other males. This cluster included only one male from each of the four mixed groups but two males from the single males-only group. These six males were categorized as "dominant". The second cluster of males (Fig. \@ref(fig:chasingnectar)A, outside and below dashed oval) was characterized by a low frequency of chasing and low nectar consumption. These males were categorized as "subordinate". In females such a pattern did not emerge (Fig. \@ref(fig:chasingnectar)B). This classification was also supported by the the highest social dominance scores as estimated by Glicko ratings in each group (Fig. \@ref(fig:glicko)) and the observation that there was generally an inverse relationship between the frequency of chasing and the frequency of being chased, especially in males (Fig. \@ref(fig:chaserchasing)). While in the females-only group four females chased other females more frequently, only one of these females would be classified as dominant using the same cut-off criteria we used for the males (Fig. \@ref(fig:chasingnectar)B), but this was not the female with the highest Glicko rating (Fig. \@ref(fig:glicko)). During the last two nights of the experiment in the clumped resource treatment, the highest nectar intake was observed in dominant males, with an intermediate intake in females, and lowest nectar intake in subordinate males (Fig. \@ref(fig:nectarcontrasts)). In contrast, in the dispersed resource treatment there were no detectable differences between the nectar intake of dominant and subordinate males at any stage of the experiment (Fig. \@ref(fig:nectarcontrasts)), while the subordinate males had a significantly lower nectar intake than females in the first two, but not in the last two experimental nights (Fig. \@ref(fig:nectarcontrasts)). Finally, the subordinate males increased their nectar intake from the clumped to the dispersed treatment, but the difference was only significant for the last two experimental nights (Fig. \@ref(fig:nectarcontrasts)). While there was a correspondent decrease in the nectar intake of dominant males, it was not significant, most likely due to the small sample size (n = 6, Fig. \@ref(fig:nectarcontrasts)). Again, in females there was no change in nectar intake between the resource treatments (Fig. \@ref(fig:nectarcontrasts))
 
 (ref:chasingnectar) Influence of chasing frequency on nectar intake in the clumped resource treatment during the last two nights of the experiment. (**A**) Males that more often chased other males also consumed more nectar. Males were divided into two non-overlapping groups by considering the chasing frequency and the amount of nectar an individual received during the clumped resource treatment at the end of the experiment. Dominant males (inside dashed line oval) met two criteria: they chased other individuals at flowers more frequently (>0.003) and received more nectar (>0.75$mL~h^{-1}$) during the clumped resource treatment. Individuals outside the dashed line oval were categorized as subordinate males. (**B**) Nectar consumption of females did not generally depend on chasing frequency during the clumped resource treatment and non-overlapping groups did not emerge.
+@@@@@ expand with new groups
 
 ```{r, chasingnectar, fig.cap="(ref:chasingnectar)", fig.width=12}
 
@@ -430,7 +435,9 @@ stat.test2 <- cons_contrasts %>%
   mutate(p.adj = ifelse(p.adj < 0.001, "<0.001", round(p.adj, 3)))
 ```
 
-(ref:nectarcontrasts) Comparison of nectar intake during the first and last two nights of the experiment depending on sex and social status. During the clumped resource distribution (left in each panel), already at the beginning of the experiment (right panel) subordinate males collected significantly less nectar than dominant males and females. At the end of the experiment (left panel), females, dominant and subordinate males differed in their nectar consumption. During the dispersed resource treatment at the beginning of the experiment subordinate males received less nectar than females, but this difference disappeared by the end of the experiment. Numbers above brackets are the p values from unequal variance T tests (Welch's tests), adjusted for multiple comparisons using the Holms method. Contrasts between conditions were from paired Welch’s tests. For clarity, only p values smaller than 0.1 are shown. Each status group represents data from the same individuals. For clarity, only the lines connecting the same dominant males are shown.  
+(ref:nectarcontrasts) Comparison of nectar intake during the first and last two nights of the experiment depending on sex and social status. During the clumped resource distribution (left in each panel), already at the beginning of the experiment (right panel) subordinate males collected significantly less nectar than dominant males and females. At the end of the experiment (left panel), females, dominant and subordinate males differed in their nectar consumption. During the dispersed resource treatment at the beginning of the experiment subordinate males received less nectar than females, but this difference disappeared by the end of the experiment. Numbers above brackets are the p values from unequal variance T tests (Welch's tests), adjusted for multiple comparisons using the Holms method. Contrasts between conditions were from paired Welch’s tests. For clarity, only p values smaller than 0.1 are shown. Each status group represents data from the same individuals. For clarity, only the lines connecting the same dominant males are shown.
+
+@@@@@ expand with new groups
 
 ```{r, nectarcontrasts, fig.cap="(ref:nectarcontrasts)", fig.width=12, fig.height=5}
 ggboxplot(cons_contrasts, x = "phase", y = "vol_hr",
@@ -517,6 +524,8 @@ m-\>m appear aggressive\
 ## Supplementary figures
 
 (ref:overview) Change of individual nectar consumption from the clumped treatment (left) to the dispersed treatment (right) for all experimental groups (rows). Males are showed with filled symbols and females with open symbols. Small symbols indicate dominant individuals, according to proportion of chasing and nectar intake during the last two nights of the experiment.
+
+@@@@@ expand with new groups
 
 ```{r, overview, fig.cap="(ref:overview)", fig.width=7, fig.height=8}
 cons_all <- vis_summaries %>%
@@ -703,6 +712,7 @@ chase_summ_test %>%
 
 (ref:sexchases) Frequency of chase events directed to bats of either sex. (**A**, **B**)  Colored bars give the frequency of chase events per night (total chases divided by number of nights) over the main experiment by each individual from each group (abscissa) towards male (**A**) and female (**B**) bats. The dominant males are shown with stripes and the subordinate males are shown with dots. (**C**) Relative frequency of chase events directed towards male bats for male (purple) and female (yellow) bats from all experimental groups (abscissa). The size of the dots represents the mean frequency of chase events per night.
 
+@@@@@ expand with new groups or focus only on mixed groups!
 
 ```{r, sexchases, fig.cap="(ref:sexchases)", fig.height=7, fig.width=15}
 
@@ -811,6 +821,7 @@ ggarrange(m_chase, f_chase, prop_chase, labels = c("A", "B", "C", ""),
 ```
 
 (ref:rewpernight) Number of rewarded visits per night (mean $\pm$ SE) during the clumped and dispersed reward treatments for male (purple) and female (yellow) bats in each experimental group (panels). Data from the same individuals are connected with lines. Individuals with highest intake rates (most "dominant" individuals) are connected with dashed lines.
+@@@@@ expand with new groups
 
 
 ```{r, rewpernight, fig.cap="(ref:rewpernight)", fig.height=4, fig.width=10}
@@ -847,6 +858,8 @@ freq_rewarded %>%
 
 (ref:intaketime) The standard deviation of group nectar consumption was used to measure the between individual differences in nectar intake. It was calculated for the clumped (left panel) and the dispersed (right panel) resource treatments, separately for males (dashed lines) and females (continuous lines) from each experimental group (different colors). For visualization only, lines give the corresponding fits based on locally weighted scatterplot smoothing (loess). The statistical analysis was based on linear regression (see Methods).
 
+@@@@@ expand with new groups
+
 ```{r, intaketime, fig.cap="(ref:intaketime)", fig.width=14}
 # vol_sd_time <- read.csv2(paste0(folder, "IntakeTime.csv"), dec = ".")
 
@@ -877,6 +890,8 @@ vol_sd_time %>%
 
 (ref:glicko) Glicko ratings within the six experimental groups. Over the last two experimental nights, the males (closed symbols) with the highest proportion of chasing events were also the individuals with the highest Glicko rating in each group (panels) during the clumped resource treatment. There was no such correspondence for females in the female-only group (right panel). Numbers at symbols give the Glicko rating in thousands.
 
+@@@@@ expand with new groups
+
 ```{r, glicko, fig.align="center", fig.cap="(ref:glicko)", fig.height=4, fig.width=17}
 chase_nectar %>% 
   ggplot(aes(glicko_rank, prop_chases, shape = sex)) +
@@ -900,6 +915,7 @@ chase_nectar %>%
 
 
 (ref:chasernectar) Male bats with the highest Glicko ratings had the highest nectar intake rates during the clumped, but generally not during the dispersed resource treatment.
+@@@@@ expand with new groups
 
 ```{r, chasernectar, fig.align="center", fig.cap="(ref:chasernectar)", fig.height=6, fig.width=11}
 intake_lastnights <- vis_summaries %>% 
@@ -931,9 +947,9 @@ chase_nectar %>%
 ```
 
 
-
-
 (ref:chaserchasing) The relationship between proportion of chases versus the proportion of being chased out of all detections for female (right) and male (left) individuals in the six experimental groups (different colors).
+
+@@@@@ expand with new groups
 
 ```{r, chaserchasing, fig.align="center", fig.cap="(ref:chaserchasing)", fig.height=4, fig.width=11}
 
