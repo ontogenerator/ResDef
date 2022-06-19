@@ -1,5 +1,6 @@
 library(tidyverse)
 library(lubridate)
+library(assertthat)
 options(digits.secs = 3) # change options to see milliseconds in DateTime 
  
 
@@ -57,10 +58,14 @@ load_raw_csv <- function(path) {
 nights <- as.list(mastertable$night)
 paths <- as.list(paste0(folder, mastertable$path))
 
-# path <- paths %>%  pluck(1)
-
 # function for aggregating data from all nights and adding correct night column
 aggregate_nights <- function(paths, nights) {
+  
+  assert_that(length(paths) == length(nights))
+  if (!every(paths, file.exists)) {
+    stop(paste("No file named ", discard(paths, file.exists), "found."))
+  }
+  
   map(paths, load_raw_csv) %>%
     set_names(nights) %>%
     enframe("night", "night_data") %>%
