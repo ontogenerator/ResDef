@@ -116,7 +116,7 @@ write.table(only_chases, file = paste0(folder, "ChaseEvents.csv"), sep = ";", ro
 
 gl <- only_chases %>% 
   filter(rev_night < 3, cond == "test") %>% 
-  select(-rev_night, -cond) %>% 
+  select(-rev_night, -cond, -loc) %>% 
   nest_by(group) %>% 
   mutate(glicko = list(glicko(data))) %>% 
   select(-data) %>% 
@@ -199,6 +199,9 @@ plot(mcmc_chases)
 est_chases <- mcmc_to_tibble(mcmc_chases) %>% 
   mutate(Model = "Chase score")
 
+emmip(mcmc_chases, sex ~ phase, CIs = TRUE, data = as.data.frame(chase_summ))
+emmeans(mcmc_chases, pairwise ~ phase | sex, CIs = TRUE, data = as.data.frame(chase_summ))
+
 set.seed(123)
 mcmc_chased <- MCMCglmm(cbind(n_chased, n_detections - n_chased) ~ sex * phase + weight, 
                         random = ~IdLabel + group,
@@ -219,12 +222,16 @@ est_chases <- est_chases %>%
          term = str_replace(term, "sexf", "sex (female)"),
          term = str_replace(term, "phase2", "treatment (dispersed)"))
 
+emmip(mcmc_chased, sex ~ phase, CIs = TRUE, data = as.data.frame(chase_summ))
+emmeans(mcmc_chased, pairwise ~ phase | sex, CIs = TRUE, data = as.data.frame(chase_summ))
+
 write.table(est_chases, file = paste0(folder, "mcmcChases.csv"), sep = ";", row.names = FALSE)
 
 female_chases <- chase_summ %>% 
   filter(group != "6m", sex != "m") %>% 
   droplevels() %>% 
   mutate(group_type = ifelse(str_detect(group, "6"), "single-sex", "mixed"),
+         group_type = factor(group_type, levels = c("single-sex", "mixed")),
          phase = factor(phase))
 
 set.seed(456)
@@ -255,17 +262,24 @@ geweke.plot(mcmc_fchased$VCV)
 plot.acfs(mcmc_fchased$VCV)
 plot(mcmc_fchased)
 
+emmip(mcmc_fchases, group_type ~ phase, CIs = TRUE, data = as.data.frame(female_chases))
+emmeans(mcmc_fchases, pairwise ~ phase | group_type, CIs = TRUE, data = as.data.frame(female_chases))
+
+
 est_fchased <- mcmc_to_tibble(mcmc_fchased) %>% 
   mutate(Model = "Chased score")
 est_fchases <- est_fchases %>% 
   bind_rows(est_fchased) %>% 
   mutate(CI = paste0("(", conf.low, ", ", conf.high, ")"),
-         term = str_replace(term, "group_typesingle-sex", "group type (single-sex)"),
+         term = str_replace(term, "group_typemixed", "group type (mixed)"),
          term = str_replace(term, "phase2", "treatment (dispersed)"))
+
+emmip(mcmc_fchased, group_type ~ phase, CIs = TRUE, data = as.data.frame(female_chases))
+emmeans(mcmc_fchased, pairwise ~ phase | group_type, CIs = TRUE, data = as.data.frame(female_chases))
+emmeans(mcmc_fchased, pairwise ~ group_type | phase, CIs = TRUE, data = as.data.frame(female_chases))
 
 write.table(est_fchases, file = paste0(folder, "mcmcChasesF.csv"), sep = ";", row.names = FALSE)
 
-# 
 vol_sd_time <- vis_summaries %>%
   filter(group_night > 0) %>%
   group_by(group, IdLabel, phase, sex, group_night) %>%
@@ -316,9 +330,12 @@ mode_HPD <- function(mcmc) {
 # fslp2 <- night + phase2night + sexfnight + sexfnightphase2
 
 emmip(mcmc_vol_time, sex ~ night | phase, at = list(night = 1:7), CIs = TRUE, data = as.data.frame(vol_sd_time))
-emtrends(mcmc_vol_time, pairwise ~ sex | phase, var = "night", data = as.data.frame(vol_sd_time))
-emtrends(mcmc_vol_time, pairwise ~ phase | sex, var = "night", data = as.data.frame(vol_sd_time))
+posth1 <- emtrends(mcmc_vol_time, pairwise ~ sex | phase, var = "night", data = as.data.frame(vol_sd_time))
+posth2 <- emtrends(mcmc_vol_time, pairwise ~ phase | sex, var = "night", data = as.data.frame(vol_sd_time))
 
+posth1$emtrends %>% tidy()
+posth1$contrasts %>% tidy()
+posth2$contrasts %>% tidy()
 
 sex_phase2 <- mcmc_vol_time$Sol[, "sexf"] + mcmc_vol_time$Sol[, "sexf:phase2"] # checks out
 night_phase2 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "phase2:night"] # checks out
@@ -326,11 +343,11 @@ females_phase2 <- mcmc_vol_time$Sol[, "phase2"] + mcmc_vol_time$Sol[, "sexf:phas
 sex_night_phase2 <- -(mcmc_vol_time$Sol[, "sexf:phase2:night"] +  mcmc_vol_time$Sol[, "sexf:night"]) # checks out
 females_nightph1 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "sexf:night"] # checks out
 females_nightph2 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "sexf:night"] + 
-  mcmc_vol_time$Sol[, "phase2:night"] +  mcmc_vol_time$Sol[, "sexf:phase2:night"] # double check!
-females_night_contrast <- females_nightph2 - females_nightph1
+  mcmc_vol_time$Sol[, "phase2:night"] +  mcmc_vol_time$Sol[, "sexf:phase2:night"] # checks out
+females_night_contrast <- females_nightph2 - females_nightph1 # checks out
 
 intake_interactions <- mode_HPD(females_phase2) %>% # for females, sign. difference between resource treatments
-  rbind(mode_HPD(night_phase2)) %>%  # slope of night for males equals zero in phase 2 (dispersed resource treatment)
+  rbind(mode_HPD(night_phase2)) %>%  # slope of night for males not diff from zero in phase 2 (dispersed resource treatment)
   rbind(mode_HPD(sex_phase2)) %>% # no difference between sexes in phase 2 (dispersed resource treatment)
   rbind(mode_HPD(sex_night_phase2)) %>% # no difference in slopes between sexes in phase 2 either
   rbind(mode_HPD(females_nightph1)) %>% # no effect of night in females in clumped
@@ -342,28 +359,7 @@ intake_interactions <- mode_HPD(females_phase2) %>% # for females, sign. differe
                   "females_night_contrast")) %>% 
   select(term, everything())
 
-predicted <- predict(mcmc_vol_time, marginal = ~us(1 + night):group, type = "response", posterior = "mode", interval = 
-                       "prediction") %>% as_tibble()
-# predicted <- tibble(predicted = predicted)
-vol_sd_time %>% 
-  bind_cols(predicted) %>% 
-  filter(group == "mixed1") %>%
-  ggplot() +
-  # ggplot(aes(group_night, sd_consumed, color = group)) +
-  geom_point(aes(group_night, fit)) +
-  geom_smooth(aes(group_night, fit, linetype = sex), method = "lm") +
-  geom_line(aes(group_night, lwr, linetype = sex)) +
-  geom_line(aes(group_night, upr, linetype = sex)) +
-  facet_grid(. ~ phase, labeller = labeller(phase = c(`1` = "Clumped resource treatment",
-                                                      `2` = "Dispersed resource treatment"))) +
-  scale_linetype_manual(labels = c("Male", "Female"), name = NULL, values=c(2, 1)) +
-  scale_x_continuous(breaks = 1:9) +
-  ylim(c(0, 1)) +
-  theme_serif() +
-  labs(x = "Experimental night", y = "Standard deviation of\nnectar intake")
-
 write.table(intake_interactions, file = paste0(folder, "IntakeInteractions.csv"), sep = ";", row.names = FALSE)
-
 
 vol_sd_time_f <- vis_summaries %>%
   filter(group_night > 0, sex != "m", group != "6m") %>%
@@ -373,11 +369,12 @@ vol_sd_time_f <- vis_summaries %>%
   group_by(group, group_night, phase) %>%
   summarise(sd_consumed = sd(vol_hr)) %>%
   mutate(phase = factor(phase),
-         group_type = ifelse(str_detect(group, "6"), "single-sex", "mixed")) %>% 
+         group_type = ifelse(str_detect(group, "6"), "single-sex", "mixed"),
+         group_type = factor(group_type, levels = c("single-sex", "mixed"))) %>% 
   ungroup() %>% 
   mutate(night = scale(group_night, center = TRUE, scale = FALSE))
 
-set.seed(321)
+set.seed(007)
 mcmc_vol_time_f <- MCMCglmm(sd_consumed ~ group_type + phase + night +
                             group_type*phase*night, 
                           random = ~us(1 + night):group,
@@ -390,39 +387,47 @@ geweke.plot(mcmc_vol_time_f$VCV)
 plot.acfs(mcmc_vol_time_f$VCV)
 plot(mcmc_vol_time_f)
 
+emmip(mcmc_vol_time_f, group_type ~ night | phase, at = list(night = 1:7), CIs = TRUE, data = as.data.frame(vol_sd_time_f))
+posth1_f <- emtrends(mcmc_vol_time_f, pairwise ~ group_type | phase, var = "night", data = as.data.frame(vol_sd_time_f))
+posth2_f <- emtrends(mcmc_vol_time_f, pairwise ~ phase | group_type, var = "night", data = as.data.frame(vol_sd_time_f))
+
+posth1_f$emtrends %>% tidy()
+posth1_f$contrasts %>% tidy()
+posth2_f$contrasts %>% tidy()
+
 est_vol_time_f <- mcmc_to_tibble(mcmc_vol_time_f) %>% 
   mutate(CI = paste0("(", conf.low, ", ", conf.high, ")"),
-         term = str_replace(term, "group_typesingle-sex", "group type (single-sex)"),
+         term = str_replace(term, "group_typemixed", "group type (mixed)"),
          term = str_replace(term, "phase2", "treatment (dispersed)"),
          term = str_replace(term, "group_night", "night"))
 
 write.table(est_vol_time_f, file = paste0(folder, "mcmcIntakeTimeF.csv"), sep = ";", row.names = FALSE)
 
-ssex_phase2 <- mcmc_vol_time_f$Sol[, "group_typesingle-sex"] + mcmc_vol_time_f$Sol[, "group_typesingle-sex:phase2"] # checks out
-grtypes_phase2 <- mcmc_vol_time_f$Sol[, "phase2"] + mcmc_vol_time_f$Sol[, "group_typesingle-sex:phase2"] # checks out
+mixed_phase2 <- mcmc_vol_time_f$Sol[, "group_typemixed"] + mcmc_vol_time_f$Sol[, "group_typemixed:phase2"] # checks out
+grtypes_phase2 <- mcmc_vol_time_f$Sol[, "phase2"] + mcmc_vol_time_f$Sol[, "group_typemixed:phase2"] # checks out
 night_phase2 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "phase2:night"] # checks out
+grtype_night_phase2 <- -(mcmc_vol_time_f$Sol[, "group_typemixed:phase2:night"] +
+                           mcmc_vol_time_f$Sol[, "group_typemixed:night"]) # checks out
+mixed_nightph1 <- mcmc_vol_time_f$Sol[, "night"] + mcmc_vol_time_f$Sol[, "group_typemixed:night"] # checks out
+mixed_nightph2 <- mcmc_vol_time_f$Sol[, "night"] + mcmc_vol_time_f$Sol[, "group_typemixed:night"] +
+  mcmc_vol_time_f$Sol[, "phase2:night"] +  mcmc_vol_time_f$Sol[, "group_typemixed:phase2:night"] # checks out
+mixed_night_contrast <- mixed_nightph2 - mixed_nightph1
 
-grtype_night_phase2 <- -(mcmc_vol_time$Sol[, "group_typesingle-sex:phase2:night"] +
-                           mcmc_vol_time$Sol[, "group_typesingle-sex:night"]) # checks out
-females_nightph1 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "sexf:night"] # checks out
-females_nightph2 <- mcmc_vol_time$Sol[, "night"] + mcmc_vol_time$Sol[, "sexf:night"] + 
-  mcmc_vol_time$Sol[, "phase2:night"] +  mcmc_vol_time$Sol[, "sexf:phase2:night"] # double check!
-females_night_contrast <- females_nightph2 - females_nightph1
 
-
-intake_interactions_f <- mode_HPD(ssex_phase2) %>% # for single-sex groups, sign. difference between resource treatments
+intake_interactions_f <- mode_HPD(mixed_phase2) %>% # for mixed groups, also sign. difference between resource treatments
   rbind(mode_HPD(grtypes_phase2)) %>% # difference between group types also in phase 2 (dispersed resource treatment)
-  rbind(mode_HPD(night_phase2)) %>% # no effect of night for mixed groups in dispersed treatment
-  
+  rbind(mode_HPD(night_phase2)) %>% # no effect of night for single-sex groups in dispersed treatment
+  rbind(mode_HPD(grtype_night_phase2)) %>% # no difference in slopes between groups in phase 2
+  rbind(mode_HPD(mixed_nightph1)) %>% # no effect of night in females in clumped
+  rbind(mode_HPD(mixed_nightph2)) %>% # nor in dispersed treatment
+  rbind(mode_HPD(mixed_night_contrast)) %>% # no difference in slope for females between treatments
   as_tibble() %>%
-  mutate(term = c("ssex_phase2", "grtypes_phase2")) %>% 
+  mutate(term = c("mixed_phase2", "grtypes_phase2", "night_phase2", "grtype_night_phase2",
+                  "mixed_nightph1", "mixed_nightph2", "mixed_night_contrast")) %>%
   select(term, everything())
 
-emmip(mcmc_vol_time_f, group_type ~ night | phase, at = list(night = 1:7), CIs = TRUE, data = as.data.frame(vol_sd_time_f))
-emtrends(mcmc_vol_time_f, pairwise ~ group_type | phase, var = "night", data = as.data.frame(vol_sd_time_f))
-emtrends(mcmc_vol_time_f, pairwise ~ phase | group_type, var = "night", data = as.data.frame(vol_sd_time_f)) %>% tidy()
 
-write.table(intake_interactions, file = paste0(folder, "IntakeInteractions.csv"), sep = ";", row.names = FALSE)
+write.table(intake_interactions_f, file = paste0(folder, "IntakeInteractionsF.csv"), sep = ";", row.names = FALSE)
 
 onlyrewarded <- allnights_n %>% 
   left_join(statuses) %>% # statuses calculation in Rmd file!
@@ -1364,3 +1369,5 @@ only_chases %>%
   count(group, loc) %>% 
   ggplot(aes(loc, n, color = group)) +
   geom_point() + geom_line()
+
+
