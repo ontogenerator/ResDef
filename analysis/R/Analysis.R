@@ -265,7 +265,6 @@ plot(mcmc_fchased)
 emmip(mcmc_fchases, group_type ~ phase, CIs = TRUE, data = as.data.frame(female_chases))
 emmeans(mcmc_fchases, pairwise ~ phase | group_type, CIs = TRUE, data = as.data.frame(female_chases))
 
-
 est_fchased <- mcmc_to_tibble(mcmc_fchased) %>% 
   mutate(Model = "Chased score")
 est_fchases <- est_fchases %>% 
@@ -528,7 +527,6 @@ ggarrange(chase_males, chase_females,
           font.label = list(size = 18, family = "serif"),
           common.legend = TRUE, legend = "none")
 
-
 stat.test2 <- cons_contrasts %>%
   group_by(partition, status) %>%
   t_test(vol_hr ~ phase) %>% 
@@ -554,8 +552,6 @@ ggboxplot(cons_contrasts, x = "phase", y = "vol_hr",
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.1))) +
   labs(x = "", y = bquote("Nectar intake ["~mL~h^-1*"]"), color = "") +
   theme_serif()
-
-
 
 chase_males <- chase_nectar %>%
   filter(sex == "m") %>%
@@ -671,10 +667,6 @@ lastnight_f <- read.csv2(file = paste0(folder, "raw/group6f/", "Day10_AllActive_
          DateTime = as.POSIXct(DateTime * (60 * 60 * 24),
                                origin = "1899-12-30", tz = "UTC"))
 
-
-
-chase_nectar %>% 
-  f
 
 only_chases %>% 
   filter(group_night > 0) %>% 
@@ -1369,5 +1361,3 @@ only_chases %>%
   count(group, loc) %>% 
   ggplot(aes(loc, n, color = group)) +
   geom_point() + geom_line()
-
-

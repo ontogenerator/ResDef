@@ -9,8 +9,3 @@
 "treatment (dispersed)";-1.14;-1.39;-0.92;1796.0147246948;5e-04;"Chased score";"(-1.39, -0.92)"
 "weight";0.19;-0.31;0.65;1869.4683724461;0.399;"Chased score";"(-0.31, 0.65)"
 "group type (mixed):treatment (dispersed)";0.21;-0.15;0.55;1852.600435151;0.247;"Chased score";"(-0.15, 0.55)"
-"(Intercept)";-8.34;-13.02;-3.16;1860.26682882299;0.001;"Chased score";"(-13.02, -3.16)"
-"group type (mixed)";0.27;-0.6;1.26;2000;0.525;"Chased score";"(-0.6, 1.26)"
-"treatment (dispersed)";-1.14;-1.39;-0.92;1796.0147246948;5e-04;"Chased score";"(-1.39, -0.92)"
-"weight";0.19;-0.31;0.65;1869.4683724461;0.399;"Chased score";"(-0.31, 0.65)"
-"group type (mixed):treatment (dispersed)";0.21;-0.15;0.55;1852.600435151;0.247;"Chased score";"(-0.15, 0.55)"

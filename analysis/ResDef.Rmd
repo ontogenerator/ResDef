@@ -244,7 +244,7 @@ ggarrange(cons_clumped, cons_distr, labels = c("A", "B"),
 
 (ref:chases) Sexes differed in the frequency of chasing or being chased during the clumped resource treatment. (**A**) Males (dark symbols) chased others significantly more than females did (light symbols, Table \@ref(tab:chasesglmm)). Shown are the individual proportions of chasing events (chase scores) over the whole experiment. Notably, in the females-only groups some females chased more than any female in the mixed groups. (**B**) Being chased by other bats did not differ significantly between sexes (Table \@ref(tab:chasesglmm)).
 
-```{r, chases, fig.cap="(ref:chases)", fig.width=14}
+```{r, chases, fig.cap="(ref:chases)", fig.width=14, fig.height=6}
 
 fig_chases <- chase_summ %>% 
   filter(phase == 1, cond == "test") %>% 
@@ -264,7 +264,7 @@ fig_chases <- chase_summ %>%
   theme(axis.ticks.x = element_line(size = 1.2),
         axis.text.x = element_text(size = 16),
         axis.text.y = element_text(size = 18),
-        legend.position = c(0.2, 0.94))
+        legend.position = c(0.08, 0.94))
 
 fig_chased <- chase_summ %>%  
   filter(phase == 1, cond == "test") %>% 
