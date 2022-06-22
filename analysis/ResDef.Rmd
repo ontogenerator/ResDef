@@ -9,12 +9,12 @@ header-includes:
 
 always_allow_html: yes
 output:
-  # bookdown::word_document2:
-  #     fig_caption: yes
-  #     number_sections: no
-  bookdown::pdf_document2:
-    number_sections: no
-    toc: no
+  bookdown::word_document2:
+      fig_caption: yes
+      number_sections: no
+  # bookdown::pdf_document2:
+  #   number_sections: no
+  #   toc: no
 
 bibliography: ResDef.bib
 # csl: behavioral-ecology.csl
@@ -554,7 +554,7 @@ cons_all <- vis_summaries %>%
 phase_label <- c(`1` = "clumped", `2` = "dispersed") 
 group_label <- c("mixed1" = "Mixed 1", "mixed2" = "Mixed 2",
                  "mixed3" = "Mixed 3", "mixed4" = "Mixed 4",
-                 "6m" = "Males-only", "6f1" = "Females-\n only 1",
+                 "6m" = "Males-\n only", "6f1" = "Females-\n only 1",
                  "6f2" = "Females-\n only 2", "6f3" = "Females-\n only 3",
                  "6f4" = "Females-\n only 4")
 
@@ -885,7 +885,7 @@ ggarrange(m_chase, f_chase, prop_chase, labels = c("A", "B", "C"),
           font.label = list(size = 18, family = "serif"))
 ```
 
-(ref:rewpernight) Number of rewarded visits per night (mean $\pm$ SE) during the clumped and dispersed reward treatments for male (purple) and female (yellow) bats in each experimental group (panels). Data from the same individuals are connected with lines. Individuals with highest intake rates (most "dominant" individuals) are connected with dashed lines.
+(ref:rewpernight) Number of rewarded visits per night (mean $\pm$ SE) during the clumped and dispersed reward treatments for male (purple) and female (yellow) bats in each experimental group (panels). Data from the same individuals are connected with lines. Individuals classified as "dominant" are connected with dashed lines.
 
 ```{r, rewpernight, fig.cap="(ref:rewpernight)", fig.height=4, fig.width=12}
 onlyrewarded <- read.csv2(paste0(folder, "RewardedVisits.csv"), dec = ".")
