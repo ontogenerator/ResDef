@@ -9,15 +9,15 @@ header-includes:
 
 always_allow_html: yes
 output:
-  bookdown::word_document2:
-      fig_caption: yes
-      number_sections: no
-  # bookdown::pdf_document2:
-  #   number_sections: no
-  #   toc: no
+  # bookdown::word_document2:
+  #     fig_caption: yes
+  #     number_sections: no
+  bookdown::pdf_document2:
+    number_sections: no
+    toc: no
 
 bibliography: ResDef.bib
-# csl: behavioral-ecology.csl
+csl: behavioral-ecology-and-sociobiology.csl
 ---
 
 Sabine Wintergerst^1,2^, York Winter^1\*\S^, Vladislav Nachev^1*\dag^
@@ -27,7 +27,7 @@ Sabine Wintergerst^1,2^, York Winter^1\*\S^, Vladislav Nachev^1*\dag^
 ^2^ Fairchild Tropical Botanic Garden, 10901 Old Cutler Rd, Miami, FL 33156, USA
 
 
-^**\***^**For correspondence:** vladislav.nachev\@charite.de, york.winter\@charite.de
+^**\***^**For correspondence:** vladislav.nachev\@charite.de, york.winter\@hu-berlin.de
 
 **Present Address:** ^\S^Institut für Biologie, Humboldt Universität, 10099 Berlin, Germany  
 ^\dag^ QUEST Center, Berlin Institute of Health at Charité – Universitätsmedizin Berlin, 10117 Germany
@@ -45,7 +45,7 @@ knitr::opts_chunk$set(
 
 # Abstract {-}
 
-Aggressive resource defense spans from the transient monopolization of a resource up to the long-term maintenance of a territory. While such interference competition is common in nectar-feeding birds, reports in nectar-feeding bats are rare. *Glossophaga* bats have been observed to temporarily defend flowers but the extent of this monopolization, its effects on nectar intake, and underlying sexual differences remain unknown. We investigated resource defense behavior of *Glossophaga mutica* in the laboratory. We presented bats with two patches of computer-controlled artificial flowers and tracked individual nectar intake. Furthermore, we established an automated method for detecting aggressive interactions at  the artificial flowers. Theoretical models of interference competition predict more aggressive interactions when resources are spatially more clumped. To test this, we varied resource distribution across two patches from clumped to dispersed and monitored bats’ interactions in one male, one female, and four mixed-sex groups. Males engaged in aggressive interactions more often than females and in each group some individuals defended clumped artificial flowers against others. Subordinate males experienced a substantial decrease in nectar intake, while females were only marginally affected by male aggression. These results suggest that aggressive interactions and their effect on nectar intake are sex-dependent in *G. mutica*. Furthermore, aggressive interactions were more frequent and resource defense was only successful when resources were clumped. Our experimental set-up allowed us to perform an automated test of models of interference competition with a mammal under controlled laboratory conditions. This approach may pave the way for similar studies with other animals. 
+Aggressive resource defense spans from the transient monopolization of a resource up to the long-term maintenance of a territory. While such interference competition is common in nectar-feeding birds, reports in nectar-feeding bats are rare. *Glossophaga* bats have been observed to temporarily defend flowers but the extent of this monopolization, its effects on nectar intake, and underlying sexual differences have remained unknown. We investigated resource defense behavior of *Glossophaga mutica* in the laboratory. We presented bats with two patches of computer-controlled artificial flowers and tracked individual nectar intake. Furthermore, we established an automated method for detecting aggressive interactions at  the artificial flowers. Theoretical models of interference competition predict more aggressive interactions when resources are spatially more clumped. To test this, we varied resource distribution across two patches from clumped to dispersed and monitored bats’ interactions in one male, one female, and four mixed-sex groups. Males engaged in aggressive interactions more often than females and in each group some individuals defended clumped artificial flowers against others. Subordinate males experienced a substantial decrease in nectar intake, while females were only marginally affected by male aggression. These results suggest that aggressive interactions and their effect on nectar intake are sex-dependent in *G. mutica*. Furthermore, aggressive interactions were more frequent and resource defense was only successful when resources were clumped. Our experimental set-up allowed us to perform an automated test of models of interference competition with a mammal under controlled laboratory conditions. This approach may pave the way for similar studies with other animals. 
 
 # Lay summary {-}
 
@@ -172,7 +172,7 @@ knitr::include_graphics("./images/design.pdf")
 ## (c) Experimental procedure
 
 Six bats were randomly selected from the colony (out of the total of ca. 150 individuals) and were tested simultaneously as a group. Four experimental groups consisted of three males together with three females (mixed groups), whereas one group consisted of six males, and four others of six females. No bats were re-used between experiments. We weighed all bats before the experiment.\
-During the nightly experiments, in addition to the nectar provided by artificial flowers, bats had access to pollen and water and to 6$mL$ of additional food containing 1.2g NektarPlus (Nekton, Keltern, Germany) and 1.8g milk powder (Milasan Folgemilch 2, Sunval Baby Food GmbH, Mannheim, Germany) dissolved in water. Rewards at flowers consisted always of 30$\mu L$ nectar (15% w/w sugar concentration, sucrose: fructose 1:2). Before the experimental schedule started, individuals were allowed to familiarize themselves with the set-up and the artificial flowers. Since during this training phase the plastic cover was removed, the two flower patches were not spatially separated and every flower visit was rewarded. This phase lasted for one to four nights until each bat visited the flowers regularly. The tag of one female of the first mixed group was not detected at any artificial flower during the first night and she was replaced by another female.\
+During the nightly experiments, in addition to the nectar provided by artificial flowers, bats had access to pollen and water and to 6$mL$ of additional food containing 1.2g NektarPlus (Nekton, Keltern, Germany) and 1.8g milk powder (Milasan Folgemilch 2, Sunval Baby Food GmbH, Mannheim, Germany) dissolved in water. Rewards at flowers consisted always of 30$\mu L$ nectar (15% w/w sugar concentration, sucrose: fructose 1:2). Before the experimental schedule started, individuals were allowed to familiarize themselves with the set-up and the artificial flowers. Since during this training phase the plastic cover was removed, the two flower patches were not spatially separated and every flower visit was rewarded. This phase lasted for one to four nights until each bat visited the flowers regularly. The ID tag of one female of the first mixed group was not detected at any artificial flower during the first night and she was replaced by another female.\
 During the experiment, the two flower patches were covered and spatially separated (Fig. \@ref(fig:design)). Experimental nights were divided into two phases. During the first phase of the night only one of the two flower patches was rewarding, and therefore the resources were spatially clumped at a single location. The fixed time interval between rewards at each flower was 60s. During the second phase of the night both patches gave rewards, resources were evenly dispersed across the two patches, and the fixed time interval between two rewards at a flower was increased to 120s. Therefore, the amount of food available per unit time did not change during the whole night; only the spatial distribution of food changed from the clumped resource treatment with one patch rewarding (five flowers) during the first phase of the night to the dispersed resource treatment with two patches rewarding (ten flowers) during the second phase of the night. With this experimental schedule, the maximal amount of nectar the bats could collect was 108$mL$, which corresponds to 18$mL$ nectar per individual per night, roughly 150% of their daily requirement [@thomson_bats_2001]. The side of the rewarding patch during the first phase of the night was chosen pseudo-randomly and the same patch was never chosen in more than two consecutive nights. For the mixed groups, the duration of the clumped resource treatment was six hours and the experiment lasted nine nights (seven nights for the first mixed group). For the same-sex groups, the duration of the first part of the night was variable (range = 4-8h, mean = 6h) and the experiment lasted eight nights for the male group and seven nights for the female groups.
 
 ## (d) Chasing behavior
