@@ -1167,17 +1167,10 @@ flower_distribution(onlyrewarded, "6f4", phases = "both")
 ```
 
 \newpage
-
-
-
 # Authors' contributions
 
 S.W. Conceptualization, Methodology, Software, Data collection, Formal Analysis, Video Analysis, Writing---original draft. V.N. Conceptualization, Methodology, Software, Formal Analysis, Data curation, Writing---review and editing, Visualization, Supervision, Project Administration.\
 Y.W. Conceptualization, Resources, Methodology, Software (data acquisition), Writing---review and editing, Supervision, Funding.
-
-# Competing interests
-
-We declare we have no competing interests.
 
 # Funding
 
@@ -1187,9 +1180,23 @@ S.W. was supported by an Elsa-Neumann-Stipendium des Landes Berlin.
 
 We thank Katja Frei and Peggy Hoffmann for assistance with the main experiments and animal keeping, Alexej Schatz for programming of the control software, and Peter Spende, Francesco Bagorda, and Waldemar Krzok for help with the experimental hardware. We also thank Marion Rivalan and Lucille Alonso for a fruitful discussion on the analysis of social behavior. We also thank Theo Bakker and three anonymous reviewers for their helpful comments and suggestions for improving the manuscript.
 
+# Ethics Declarations
+
+## Ethical approval
+
+The experiments were conducted under the supervision and with the approval of the animal welfare officer heading the animal welfare committee at Humboldt University. Experiments followed national regulations in accordance with the European Communities Council Directive 10/63/EU.
+
+## Informed consent
+
+Not applicable.
+
+## Conflict of interest
+
+The authors declare no competing interests.
+
 # Data Availability
 
-All data and code are available in the Zenodo repository:  https://doi.org/10.5281/zenodo.5205511.
+The datasets and code generated and analysed during the current study are available in the Zenodo repository:  https://doi.org/10.5281/zenodo.7581235.
 
 \newpage
 
