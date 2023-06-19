@@ -1,0 +1,40 @@
+---
+title: "Sex-dependent resource defense in a nectar-feeding bat"
+format: pdf
+editor: visual
+bibliography: ResDef.bib
+---
+
+Sabine Wintergerst^1,2^, York Winter^1\*\S^, Vladislav Nachev^1*\dag^
+
+^1^ Institut für Biologie, Humboldt Universität, Germany
+
+^2^ Fairchild Tropical Botanic Garden, 10901 Old Cutler Rd, Miami, FL 33156, USA
+
+
+^**\***^**For correspondence:** vladislav.nachev\@charite.de, york.winter\@hu-berlin.de
+
+**Present Address:** ^\S^Institut für Biologie, Humboldt Universität, 10099 Berlin, Germany  
+^\dag^ QUEST Center, Berlin Institute of Health at Charité – Universitätsmedizin Berlin, 10117 Germany
+
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
